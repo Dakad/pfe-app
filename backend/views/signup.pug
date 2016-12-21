@@ -1,0 +1,53 @@
+extends layout
+
+block append head
+  link(rel='stylesheet',href='/css/login.css')
+
+block content
+  .row
+    col-sm-6.col-md-4.col-md-offset-4
+      h1.text-center.login-title=title
+      .login-panel
+        img.img-avatar(src="/img/avatar_signup.png"  alt="Avatar for signup new user")/
+        form.form-login(method='POST')
+
+          .form-group.required
+            label.ctrl-label(for='email') Email address :
+            .input-group
+              .input-group-addon
+                i.fa.fa-at(aria-hidden="true")
+              input.form-control#email(
+                    type="text"
+                    name='username'
+                    placeholder="Email" 
+                    required autofocus)
+                    
+          .form-group.required
+            label.ctrl-label(for='pwd') Password :
+            .input-group
+              .input-group-addon
+                i.fa.fa-lock(aria-hidden="true")
+              input.form-control#pwd(
+                    type="password"
+                    name="pwd"
+                    placeholder="Password" 
+                    required)
+                            
+          .form-group.required
+            label.ctrl-label(for='pwd2') Comfirm Password :
+            .input-group
+              .input-group-addon
+                i.fa.fa-lock(aria-hidden="true")
+              input.form-control#pwd(
+                    type="password"
+                    name="confirm_pwd"
+                    placeholder="Password again ... " 
+                    required)
+          .checkbox.pull-left
+            label
+              input(type="checkbox" value="log-again") 
+              | Read & agree to the Terms of service and Privacy policy
+          .form-group
+            button.btn.btn-lg.btn-success.btn-block(type="submit") Sign up
+            hr
+            a.btn.btn-lg.btn-primary.btn-block(href='/public/login') Already registred

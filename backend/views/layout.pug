@@ -1,8 +1,10 @@
 doctype html
-html(lang='fr')
-  head
-    title= title
-    link(rel='stylesheet', href='/css/bootstrap.css')
-    link(rel='stylesheet', href='/css/style.css')
+html(lang='en')
+  include ./_includes/head
   body
-    block content
+    include ./_includes/header
+    
+    .container
+      block content
+      
+    include ./_includes/footer
