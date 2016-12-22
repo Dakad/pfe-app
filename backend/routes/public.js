@@ -1,9 +1,32 @@
 'use strict';
 
+/**
+ * =============================
+ *
+ * Route for /public/*
+ *
+ * =============================
+ *
+ * Attributes :
+ *
+ * Routes   --> Ctrler :
+ *      /   --> publicCtrl.homePage
+ *  about/  --> publicCtrl.aboutPage
+ *  login/  --> publicCtrl.loginPage
+ *  signup/ --> publicCtrl.signupPage
+ *
+ *
+ * =============================
+ */
 
+
+/**
+ * Load modules dependencies.
+ */
+ // Built-in
 const router = require('express').Router();
 
-
+// Custom -mine
 const publicCtrl = require('../ctrlers/public');
 
 
@@ -26,5 +49,11 @@ router.get('/about', publicCtrl.aboutPage);
 
 
 
+
+/**
+ * Exports
+ */
+
+// Methods
 
 module.exports = router;

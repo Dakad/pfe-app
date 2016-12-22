@@ -1,61 +1,101 @@
 'use strict';
 
+/**
+ * =============================
+ *
+ * Ctrler for the route /public/*
+ * All methods receive (req:Request,res:Response,next:Middleware)
+ * Only respond with a page to render and some variables
+ *
+ * =============================
+ *
+ * Attributes : /
+ *
+ * Methods : /
+ *		+ renderHomePage()
+ *		+ renderLoginPage()
+ *		+ renderSignupPage()
+ *		+ renderAboutPage()
+ *
+ * Events : /
 
-var renderHomePage = function (req,res,next) {
-    res.render('home', {title : 'PFE App'});  
+ *
+ *
+ * =============================
+ */
+
+
+/**
+ * Load modules dependencies.
+ */
+ // Built-in
+
+
+ // Custom -Mine
+
+
+
+var renderHomePage = function (req,res) {
+    res.render('home', {title : 'PFE App'});
 };
 
 
-var renderLoginPage = function (req,res,next) {
-    res.render('login', {title : 'Sign in to continue'});  
+var renderLoginPage = function (req,res) {
+    res.render('login', {title : 'Sign in to continue'});
 };
 
 
-var renderSignupPage = function (req,res,next) {
-    res.render('signup', {title : 'Register a new user'});  
+var renderSignupPage = function (req,res) {
+    res.render('signup', {title : 'Register a new user'});
 };
 
 
-var renderAboutPage = function (req,res,next) {
+var renderAboutPage = function (req,res) {
     res.render('about',{
         title   : 'About the dev team of this marvellous app',
         team    : [
             {
-                name    :'Dakad', 
+                name    :'Dakad',
                 avatar  : 'https://avatars3.githubusercontent.com/u/3106338?v=3&s=400',
                 git     : 'https://github.com/Dakad?tab=repositories&type=source',
                 fb      : 'https://github.com/Dakad?tab=repositories&type=source',
                 twit    : 'https://github.com/Dakad?tab=repositories&type=source',
                 lkdin   : 'https://github.com/Dakad?tab=repositories&type=source',
             },{
-                name    :'Tegawende', 
+                name    :'Tegawende',
                 avatar  : 'https://avatars3.githubusercontent.com/u/20798720?v=3&s=400',
                 git  : 'https://github.com/Tegawende'
-            },   
+            },
         ]
-    
-    });  
+
+    });
 };
 
 
 
 
 
+
+/**
+ * Exports
+ */
+
+// Methods
 module.exports = {
-    homePage : function(req,res,next){
+    homePage : function(req,res){
         renderHomePage(req,res);
     }
-    
-    ,loginPage : function(req,res,next){
+
+    ,loginPage : function(req,res){
         renderLoginPage(req,res);
-    } 
-    
-    ,signupPage : function(req,res,next){
+    }
+
+    ,signupPage : function(req,res){
         renderSignupPage(req,res);
     }
-    
-    ,aboutPage  : function (req,res,next){
+
+    ,aboutPage  : function (req,res){
         renderAboutPage(req,res);
     }
-    
+
 };

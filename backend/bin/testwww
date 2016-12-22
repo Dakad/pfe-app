@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+// Custom
+var Config = require('../modules/config.js');
+var Server = require('../modules/server.js');
+var Logger = require('../modules/logger.js');
+
+
+
+Config.load()
+  .then(Server.start)
+  .catch(function (err) {
+    console.error(err);
+    Logger.error(err);
+    Server.close();
+  });
