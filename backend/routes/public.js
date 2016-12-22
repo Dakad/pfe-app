@@ -36,7 +36,7 @@ router.use((req,res,next) => {
 })
 
 /* GET home page. */
-router.get('/', publicCtrl.homePage);
+router.get(['/', '/home'], publicCtrl.homePage);
 
 /* GET login page. */
 router.get('/login', publicCtrl.loginPage);

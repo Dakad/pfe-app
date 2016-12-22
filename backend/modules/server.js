@@ -32,6 +32,7 @@ const express    = require('express');
 const path       = require('path');
 const Morgan     = require('morgan');
 const bodyParser = require('body-parser');
+const helmet     = require('helmet');
 
 
 // Custom - Mine
@@ -68,28 +69,37 @@ function configServer(){
     logger.info('[Server] Init the DB with the pool : MAX. Client ',DB.MAX_CLIENTS);
     DB.initConnection();
   }).then(function() {
+
+    var folder =  path.join(__dirname,'..' , 'public');
+    logger.info('[Server] Init the app(Express) with static folder :',folder);
+    _app.use(express.static(path.join(__dirname, '../public')));
+
     // View engine setup
-    var folder =  path.join(__dirname,'..' , 'views');
-    logger.info('[Server] Init the app(Express) with views folder : ',folder);
+    folder =  path.join(__dirname,'..' , 'views');
+    logger.info('[Server] Init the app(Express) with views folder :',folder);
     _app.set('views', folder);
+
     logger.info('[Server] Init the app(Express) with Views Engine :',' Pug(Jade)');
     _app.set('view engine', 'pug');
 
     // Get port from env and store in Express.
-    logger.info('[Server] Init the app(Express) with env Port : ',nconf.get('PORT'));
-    _app.set('port', nconf.get('PORT'));
+    // logger.info('[Server] Init the app(Express) with env Port :',nconf.get('PORT'));
+    // _app.set('port', nconf.get('PORT'));
 
     logger.info('[Server] Init the app(Express) with Logger :', 'WINSTON with morgan stream');
     _app.use(Morgan("dev"));
+
 
     logger.info('[Server] Init the app(Express) with BOdyParson to :','JSON');
     _app.use(bodyParser.json()); // The body is parsed into JSON
     _app.use(bodyParser.urlencoded({ extended: false })); // The JSON parsed body will only
     // contain key-value pairs, where the value can be a string or array
 
-    folder =  path.join(__dirname,'..' , 'public');
-    logger.info('[Server] Init the app(Express) with static folder : ',folder);
-    _app.use(express.static(path.join(__dirname, '../public')));
+    logger.info('[Server] Init the app(Express) protection from some well-known web vulnerabilities :','helmet');
+    _app.use(helmet());
+    // _app.use(helmet.noCache());
+
+
 
   }).then(function (){
 
@@ -180,11 +190,13 @@ Server.start = function (cb){
 Server.stop = function (){
   const _server = Server._server;
   if (_server && typeof _server.close == 'function') {
-		DB.stop();
+		DB.stopConnection();
 		_server.close();
-		logger.warn('[Server] Web server no more listening on ' +_server.address().port);
+		console.log(_server.address());
+		logger.warn('[Server] Web server no more listening on :',nconf.get('PORT'));
+		process.exit();
 	} else {
-		logger.warn('[Server] Cannot stop web server not yet init. listening on ' +_server.address().port);
+		logger.error('[Server] Cannot stop web server not yet still listening on ' +nconf.get('PORT'));
 	}
 };
 

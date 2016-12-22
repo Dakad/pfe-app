@@ -3,13 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon ./app",
+    "start": "nodemon ./app.js",
     "test": "nodemon ./bin/testwww"
   },
   "dependencies": {
     "body-parser": "~1.15.2",
+    "cluster": "^0.7.7",
     "dotenv": "^2.0.0",
     "express": "~4.14.0",
+    "helmet": "^3.1.0",
     "morgan": "~1.7.0",
     "nconf": "^0.8.4",
     "pg": "^6.1.2",
