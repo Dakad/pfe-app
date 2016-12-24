@@ -11,9 +11,12 @@
  *
  * Routes   --> Ctrler :
  *      /   --> publicCtrl.homePage
+ *  home/  --> publicCtrl.aboutPage
  *  about/  --> publicCtrl.aboutPage
  *  login/  --> publicCtrl.loginPage
  *  signup/ --> publicCtrl.signupPage
+ *  doc/    --> /
+ *  documentation/ --> publicCtrl.signupPage
  *
  *
  * =============================
@@ -23,14 +26,14 @@
 /**
  * Load modules dependencies.
  */
- // Built-in
+// Built-in
 const router = require('express').Router();
 
 // Custom -mine
 const publicCtrl = require('../ctrlers/public');
 
 
-router.use((req,res,next) => {
+router.use((req, res, next) => {
     res.locals.currentUrl = req.path;
     next();
 })
@@ -47,7 +50,14 @@ router.get('/signup', publicCtrl.signupPage);
 /* GET signup page. */
 router.get('/about', publicCtrl.aboutPage);
 
+/* GET documentation page. */
+router.get(['/doc', '/documentation'], publicCtrl.docPage);
 
+// catch 404 and forward to error handler
+router.use(publicCtrl.errorHandler);
+
+// Last middleware -- Error handler - What to do when a error occurs
+router.use(publicCtrl.errorPage);
 
 
 /**

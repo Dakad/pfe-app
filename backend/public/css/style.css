@@ -1,8 +1,8 @@
 body {
-  font: "Lucida Grande", Helvetica, Arial, sans-serif;
-  padding-top: 3em;
-
+    font: "Lucida Grande", Helvetica, Arial, sans-serif;
+    padding-top: 3em;
 }
+
 
 /*a {
   color: #00B7FF;
@@ -10,13 +10,13 @@ body {
 
 .page-header {
     /* padding-bottom: 9.5px; */
-    margin-bottom: 1.3em; 
+    margin-bottom: 1.3em;
     /* margin: 42px 0 21px; */
     border-bottom: 1px solid black;
 }
 
-hr{
-      border-top: 1px solid black;
+hr {
+    border-top: 1px solid black;
 }
 
 footer {
@@ -28,3 +28,7 @@ footer {
     color: #fff;
 }
 
+.navbar-doc {
+    position: fixed;
+    min-width: 15%;
+}

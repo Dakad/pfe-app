@@ -1,7 +1,7 @@
 {
   "development": {
     "dialect": "postgres",
-    "url": "postgres://fjqwcrgf:jkh1rQG2mcokA8RlndjLUeBlENepxFfa@horton.elephantsql.com:5432/fjqwcrgf"
+    "use_env_variable": "DATABASE_URL"
   },
   "production": {
     "dialect": "postgres",
