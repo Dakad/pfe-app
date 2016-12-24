@@ -30,7 +30,7 @@ const nconf = require('nconf');
 const pg    = require('pg');
 
 // Custom - Mine
-var logger = require('../modules/logger.js');
+const logger = require('../modules/logger.js');
 
 
 /**

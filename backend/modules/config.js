@@ -44,14 +44,18 @@ const dbUrlParseur = function(cb) {
 
     nconf.overrides({
         'DB_Config': {
-            user: DB_AUTH[0], //env var: DATABASE_USER
-            password: DB_AUTH[1], //env var: DATABASE_PASSWORD
+            dialect : 'postgres', // Which kind of DB
+            username : DB_AUTH[0], //env var: DATABASE_USER
+            password : DB_AUTH[1], //env var: DATABASE_PASSWORD
             host: DB_URL.hostname, // Server hosting the postgres database
             port: DB_URL.port, //env var: DATABASE_PORT
             database: DB_URL.pathname.split('/')[1],
-            max: 17, //set pool max size to 30
-            min: 5, //set min pool size to 5
-            idleTimeoutMillis: 3000 //close idle clients after 3 seconds
+            pool : {
+              max: 17, //set pool max size to 30
+              min: 5, //set min pool size to 5
+              idle: 10000 //close idle clients after 10 seconds
+            }
+
         }
     });
 }
