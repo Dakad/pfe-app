@@ -61,7 +61,7 @@ const Server = {};
  * 
  */
 function getBindedServerPort() {
-    return (Server._server) ? Server._server.address().port : nconf.get('PORT');
+    return (Server._server && Server._server.address()) ? Server._server.address().port : nconf.get('PORT');
 }
 
 
@@ -118,28 +118,11 @@ function configServer() {
 
 
     }).then(function() {
-
         logger.info('[Server - Route] Init the app(Express) with route for : ', '/public/*');
         _app.use('/public', defRoute);
+
         logger.info('[Server - Route] Init the app(Express) with route for : ', '/api/*');
         _app.use('/api', apiRoute);
-
-        // catch 404 and forward to error handler
-        _app.use(function(req, res, next) {
-            var err = new Error('Not Found');
-            err.status = 404;
-            next(err);
-        });
-
-        // error handler
-        _app.use(function(err, req, res) {
-            // set locals, only providing error in development
-            res.locals.msg = err.message;
-            res.locals.error = req._app.get('env') === 'development' ? err : {};
-            logger.err(err);
-            // render the error page
-            res.status(err.status || 500).render('error');
-        });
 
         logger.info('[Server] Init done !');
     })
@@ -215,7 +198,7 @@ Server.stop = function() {
  * Events cb for error the Server
  */
 Server.onError = function(err) {
-    logger.warn('[Server] ' + err);
+    logger.error('[Server] ' + err);
 };
 
 

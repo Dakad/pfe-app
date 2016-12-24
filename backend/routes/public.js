@@ -53,7 +53,11 @@ router.get('/about', publicCtrl.aboutPage);
 /* GET documentation page. */
 router.get(['/doc', '/documentation'], publicCtrl.docPage);
 
+// catch 404 and forward to error handler
+router.use(publicCtrl.errorHandler);
 
+// Last middleware -- Error handler - What to do when a error occurs
+router.use(publicCtrl.errorPage);
 
 
 /**

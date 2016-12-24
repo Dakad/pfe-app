@@ -17,6 +17,8 @@
  *		+ renderSignupPage()
  *		+ renderAboutPage()
  *		+ renderDocPage()
+ *		+ renderErrorPage()
+ *		+ errorHandler()
  *
  * Events : /
  * =============================
@@ -27,10 +29,10 @@
  * Load modules dependencies.
  */
 // Built-in
-
+const nconf = require('nconf');
 
 // Custom -Mine
-
+const logger = require('../modules/logger');
 
 
 var renderHomePage = function(req, res) {
@@ -52,6 +54,7 @@ var renderDocPage = function(req, res) {
     res.render('doc', { title: 'API Documentation' });
 };
 
+
 var renderAboutPage = function(req, res) {
     res.render('about', {
         title: 'About the dev team of this marvellous app',
@@ -72,8 +75,22 @@ var renderAboutPage = function(req, res) {
 };
 
 
+var renderErrorPage = function(err, res, next) {
+    console.log(nconf.get('env'));
+    // set locals, only providing error in development
+    res.locals.msg = err.message;
+    logger.error(err);
+    res.status(err.status || 500).render('error');
+};
 
-
+/**
+ * Error Handler
+ */
+var errorHandler = function(req, res, next) {
+    var err = new Error('Not Found - Something went south');
+    err.status = 404;
+    renderErrorPage(err, res);
+}
 
 
 /**
@@ -104,6 +121,11 @@ module.exports = {
     ,
     aboutPage: function(req, res) {
         renderAboutPage(req, res);
+    },
+    errorPage: function(err, req, res) {
+        renderErrorPage(err, res);
     }
 
+    ,
+    errorHandler: errorHandler
 };

@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "start": "nodemon ./app.js",
+        "start": "nodemon --optimize_for_size --max_old_space_size=460 --gc_interval=100 ./app.js",
         "test": "nodemon ./bin/testwww"
     },
     "dependencies": {

@@ -31,7 +31,7 @@ block content
             td NULL
 
 
-      h2 HTTP Status code
+      h2 API Response Status code
       p All requests return a JSON formatted document with a HTTP Status code. 
       | Here is a list of Status code used for response to an API request :
       table.table.table-hover.table-striped
@@ -81,5 +81,13 @@ block content
             td 500
             td Internal server error
             td Problem with your server or the database server
+      h2 Response Data
+      p The API return always a JSON format data, one of three things for each request
+      pre
+        |{
+        |  'data'   : {}                   // Contains the result of the request
+        |  'status' : '200'               // Corresponding to the response status code
+        |  'err'    : 'Shit went down !' // Corresponding to error message with the matching status code.
+        |} 
 
     
