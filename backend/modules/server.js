@@ -36,8 +36,8 @@ const helmet = require('helmet');
 
 
 // Custom - Mine
-const DB = require("../models/db.js")
-const logger = require("./logger.js");
+const DB = require("../models/index")
+const logger = require("./logger");
 
 // Routes
 const defRoute = require('../routes/public');
@@ -58,7 +58,7 @@ const Server = {};
 /**
  * Return the port listened on the server.
  * If the server not defined yet, return the default port on env var.
- * 
+ *
  */
 function getBindedServerPort() {
     return (Server._server && Server._server.address()) ? Server._server.address().port : nconf.get('PORT');
@@ -75,10 +75,9 @@ function getBindedServerPort() {
  *		- Set the error middlewares
  */
 function configServer() {
-    return Promise.resolve(() => {
-        logger.info('[Server] Init the DB with the pool : MAX. Client ', DB.MAX_CLIENTS);
+    return new Promise(function (fulfill, reject){
+        //logger.info('[Server] Init the DB with the pool : MAX. Client ', DB.MAX_CLIENTS);
         DB.initConnection();
-    }).then(function() {
 
         var folder = path.join(__dirname, '..', 'public');
         logger.info('[Server] Init the app(Express) with static folder :', folder);
@@ -115,9 +114,6 @@ function configServer() {
         _app.use(helmet());
         // _app.use(helmet.noCache());
 
-
-
-    }).then(function() {
         logger.info('[Server - Route] Init the app(Express) with route for : ', '/public/*');
         _app.use('/public', defRoute);
 
@@ -125,7 +121,10 @@ function configServer() {
         _app.use('/api', apiRoute);
 
         logger.info('[Server] Init done !');
-    })
+
+        fulfill();
+
+    });
 };
 
 

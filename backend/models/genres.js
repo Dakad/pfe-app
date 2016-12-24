@@ -2,15 +2,15 @@
 module.exports = function(sequelize, DataTypes) {
   var Genres = sequelize.define('Genres', {
     name :{
-      types : DataTypes.STRING,
+      type : DataTypes.STRING,
       allowNull : false,
       unique : true
     },
-    description: DataTypes.TEXT
+    description: DataTypes.STRING
   }, {
     classMethods: {
       associate: function(models) {
-        Genres.belongsTo(models.Books);
+        Genres.belongsToMany(models.Books, {through: 'BookGenres'});
       }
     }
   });

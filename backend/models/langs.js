@@ -2,18 +2,18 @@
 module.exports = function(sequelize, DataTypes) {
   var Langs = sequelize.define('Langs', {
     code: {
-      types     : DataTypes.STRING,
+      type     : DataTypes.STRING,
       allowNull : false,
       unique    : true
     },
     name: {
-      types    : DataTypes.STRING,
+      type    : DataTypes.STRING,
       allowNull: false
     }
   }, {
     classMethods: {
       associate: function(models) {
-        Langs.belongsTo(models.Books);
+        Langs.belongsToMany(models.Books, {through: 'Editions'});
       }
     }
   });

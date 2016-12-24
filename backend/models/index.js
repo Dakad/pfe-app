@@ -32,17 +32,18 @@ const Sequelize = require('sequelize');
 const basename  = path.basename(module.filename);
 
 // Custom - Mine
-const logger    = require('../modules/logger.js');
-const sequelize = new Sequelize(nconf.get('DATABASE_URL'),nconf.get('DB_CONFIG'));
+const logger    = require('../modules/logger');
 const DB        = {};
-
+var sequelize;
 
 
 
 function initDB (){
+    sequelize = new Sequelize(nconf.get('DATABASE_URL'),nconf.get('DB_CONFIG'));
+
     fs.readdirSync(__dirname)
       .filter(function(file) {
-        return (file.indexOf('.') !== 0) && (file !== basename);
+        return ((file.indexOf('.') !== 0) && (file !== basename) && (path.extname(file) === '.js'));
       })
       .forEach(function(file) {
         // Grab all the model files from the current directory,
@@ -52,8 +53,8 @@ function initDB (){
       });
 
     Object.keys(DB).forEach(function(modelName) {
-        // Apply any relations between each model (if any).
-      if (DB[modelName].associate) {
+      // Apply any relations between each model (if any).
+      if (modelName.toLowerCase() !== 'sequelize' && DB[modelName].associate) {
         DB[modelName].associate(DB);
       }
     });
