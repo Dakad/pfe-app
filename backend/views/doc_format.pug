@@ -1,0 +1,85 @@
+
+block content
+  .panel.panel-info
+    .panel-heading
+      h3.panel-title#format Format 
+    .panel-body
+      h2 Request method
+      p HTTP requests can have different methods that essentially tell the server what type of action to take.
+      table.table.table-hover.table-striped
+        thead
+          tr.active.text-center
+            th Request method
+            th Use
+            th Response
+        tbody
+          tr
+            td GET
+            td Read data from the database
+            td Data object answering the request
+          tr
+            td POST
+            td Create new data in the database
+            td New data object as seen in the database
+          tr
+            td PUT
+            td Update a document in the database
+            td Updated data object as seen in the database
+          tr
+            td DELETE
+            td Delete an object from the database
+            td NULL
+
+
+      h2 HTTP Status code
+      p All requests return a JSON formatted document with a HTTP Status code. 
+      | Here is a list of Status code used for response to an API request :
+      table.table.table-hover.table-striped
+        thead
+          tr.active.text-center
+            th Status Code
+            th Name
+            th Use case
+        tbody
+          tr
+            td 200
+            td OK
+            td A successful GET or PUT request
+          tr
+            td 201
+            td Created
+            td A successful POST request
+          tr
+            td 204
+            td No content
+            td A successful DELETE request
+          tr
+            td 400
+            td Bad request
+            td An unsuccessful GET, POST, or PUT request, due to invalid content
+          tr
+            td 401
+            td Unauthorized
+            td  Requesting a restricted URL with incorrect token or none provided
+          tr
+            td 403
+            td Forbidden
+            td Making a request that isn’t allowed
+          tr
+            td 404
+            td Not found
+            td Unsuccessful request due to an incorrect parameter in the URL.
+          tr
+            td 405
+            td Method not allowed
+            td Request method not allowed for the given URL
+          tr
+            td 409
+            td Conflict
+            td  Unsuccessful POST request when another object already exists with the same data
+          tr
+            td 500
+            td Internal server error
+            td Problem with your server or the database server
+
+    
