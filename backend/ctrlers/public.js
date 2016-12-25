@@ -17,6 +17,7 @@
  *		+ renderSignupPage()
  *		+ renderAboutPage()
  *		+ renderDocPage()
+ *		+ renderDashboardPage()
  *		+ renderErrorPage()
  *		+ errorHandler()
  *
@@ -33,29 +34,65 @@ const nconf = require('nconf');
 
 // Custom -Mine
 const logger = require('../modules/logger');
+const userDAO = require('../models/users');
 
 
-var renderHomePage = function(req, res) {
+
+const checkToken = function(req,res,next){
+    // Check if token && token is mine
+    // If ok, next(true)
+    // Otherwise, throw ForbiddenError('You shall not pass ! Log in first')
+    next();
+}
+
+
+
+const renderHomePage = function(req, res) {
     res.render('home', { title: 'PFE App' });
 };
 
 
-var renderLoginPage = function(req, res) {
+const logIn = function(req,res,next){
+    console.log(req.body);
+    // Validate the input from the req.body
+    // Sanitize & clear the input
+    // Go fecth the matching user in the DB
+    // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
+    // Put the user and this token into res.locals
+    // Call the next middleware
+    next();
+}
+const renderLoginPage = function(req, res) {
     res.render('login', { title: 'Sign in to continue' });
 };
 
 
-var renderSignupPage = function(req, res) {
+
+const signUp = function(req,res,next){
+    console.log(req.body);
+    // Validate the input from the req.body
+    // Sanitize & clear the input
+    // Go fecth the maching user in the DB
+    // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
+    // Put the user and this token into res.locals
+    // Call the next middleware
+    res.locals.flash = {
+        'type'  : 'success',
+        'title' : 'New User',
+        'msg'   : 'Welcome '+ + ' !\n You can go log in now.'
+    }
+    res.redirect('/public');
+}
+const renderSignupPage = function(req, res) {
     res.render('signup', { title: 'Register a new user' });
 };
 
-
-var renderDocPage = function(req, res) {
+const renderDocPage = function(req, res) {
     res.render('doc', { title: 'API Documentation' });
 };
 
 
-var renderAboutPage = function(req, res) {
+const renderAboutPage = function(req, res) {
     res.render('about', {
         title: 'About the dev team of this marvellous app',
         team: [{
@@ -75,8 +112,17 @@ var renderAboutPage = function(req, res) {
 };
 
 
-var renderErrorPage = function(err, res, next) {
-    console.log(nconf.get('env'));
+const renderDashboardPage = function(req,res){
+    res.render('dashboard',{
+        'title' : 'Your API Wallet',
+        'apiID' : 'test',
+        'apiKey': '915cd41e9-b16d4378fa-448ed92f-104f-585ffb8ffc13ae1770000084'
+    });
+}
+
+
+
+const renderErrorPage = function(err, res, next) {
     // set locals, only providing error in development
     res.locals.msg = err.message;
     logger.error(err);
@@ -86,11 +132,14 @@ var renderErrorPage = function(err, res, next) {
 /**
  * Error Handler
  */
-var errorHandler = function(req, res, next) {
-    var err = new Error('Not Found - Something went south');
+const errorHandler = function(req, res, next) {
+    const err = new Error('Not Found - Something went south');
     err.status = 404;
     renderErrorPage(err, res);
 }
+
+
+
 
 
 /**
@@ -99,33 +148,22 @@ var errorHandler = function(req, res, next) {
 
 // Methods
 module.exports = {
-    homePage: function(req, res) {
-        renderHomePage(req, res);
-    }
+    isAuth       : checkToken,
 
-    ,
-    loginPage: function(req, res) {
-        renderLoginPage(req, res);
-    }
+    homePage     : renderHomePage,
 
-    ,
-    signupPage: function(req, res) {
-        renderSignupPage(req, res);
-    }
+    loginPage    : renderLoginPage,
+    logMe        : logIn,
 
-    ,
-    docPage: function(req, res) {
-        renderDocPage(req, res);
-    }
+    signupPage   : renderSignupPage,
+    registerMe   : signUp,
 
-    ,
-    aboutPage: function(req, res) {
-        renderAboutPage(req, res);
-    },
-    errorPage: function(err, req, res) {
-        renderErrorPage(err, res);
-    }
+    dashboardPage: renderDashboardPage,
 
-    ,
-    errorHandler: errorHandler
+    docPage      : renderDocPage,
+
+    aboutPage    : renderAboutPage,
+
+    errorPage    : renderErrorPage,
+    errorHandler : errorHandler
 };

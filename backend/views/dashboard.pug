@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  .row.clearfix
+    h1.page-header=title
+
+    blockquote.blockquote-reverse
+      p This pairs of random characters are your keys to the #[span.text-success kingdom] !
+      | Please, don't lose them or publish those on some forum, #[i.fa.fa-stack-overflow] or #[i.fa.fa-github]
+      small.lalbel-label-warning Use those wisely and carefully
+
+    h3 Your API ID :
+      pre.to-copy=apiID
+    h3 Your secret key :
+      .well.well-sm.to-copy=apiKey

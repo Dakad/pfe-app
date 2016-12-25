@@ -41,17 +41,29 @@ router.use((req, res, next) => {
 /* GET home page. */
 router.get(['/', '/home'], publicCtrl.homePage);
 
-/* GET login page. */
-router.get('/login', publicCtrl.loginPage);
 
-/* GET signup page. */
-router.get('/signup', publicCtrl.signupPage);
+/* GET-POST login page. */
+router.route('/login')
+    .get(publicCtrl.loginPage)
+    .post(publicCtrl.logMe,publicCtrl.dashboardPage);
+
+
+/* GET-POST signup page. */
+router.route('/signup')
+    .get(publicCtrl.signupPage)
+    .post(publicCtrl.registerMe);
+
 
 /* GET signup page. */
 router.get('/about', publicCtrl.aboutPage);
 
 /* GET documentation page. */
 router.get(['/doc', '/documentation'], publicCtrl.docPage);
+
+/* GET Dashboard page. */
+router.get(['/keys', '/manage'], [publicCtrl.isAuth,publicCtrl.dashboardPage]);
+
+
 
 // catch 404 and forward to error handler
 router.use(publicCtrl.errorHandler);

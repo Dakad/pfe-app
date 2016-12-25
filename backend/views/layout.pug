@@ -1,10 +1,11 @@
 doctype html
 html(lang='en')
-  include ./_includes/head
+  include ./partials/_head
   body
-    include ./_includes/header
-    
+    include ./partials/_header
+
     .container
+      include ./partials/_flash-msg
       block content
-      
-    include ./_includes/footer
+
+    include ./partials/_footer

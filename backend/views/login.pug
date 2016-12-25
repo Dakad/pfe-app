@@ -16,11 +16,11 @@ block content
               .input-group-addon
                 i.fa.fa-at(aria-hidden="true")
               input.form-control#email(
-                    type="text"
+                    type="email"
                     name='username'
-                    placeholder="Email" 
+                    placeholder="Email"
                     required autofocus)
-                    
+
           .form-group
             label(for='pwd') Password :
             .input-group
@@ -29,12 +29,12 @@ block content
               input.form-control#pwd(
                     type="password"
                     name="pwd"
-                    placeholder="Password" 
+                    placeholder="Password"
                     required)
-        
+
           .checkbox.pull-left
           label
-            input(type="checkbox" value="log-again") 
+            input(type="checkbox" name="log-again" value="yes")
             |  Remember me
           .form-group
           button.btn.btn-lg.btn-success.btn-block(type="submit") Sign in

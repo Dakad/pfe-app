@@ -1,0 +1,16 @@
+include ../_mixins
+
+
+#navbar-main.navbar-collapse.collapse
+  ul.nav.navbar-nav
+    +navLink('About','/public/about')
+    +navLink('Doc','/public/doc')
+
+
+  ul.nav.navbar-nav.navbar-right
+    if isAuth
+      +navLink('API Wallet','/public/dashboard')
+      +navLink('Logout','/public/logout')
+    else
+      +navLink('Sign up','/public/signup')
+      +navLink('Login','/public/login')
