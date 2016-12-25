@@ -33,8 +33,12 @@ const basename  = path.basename(module.filename);
 
 // Custom - Mine
 const logger    = require('../modules/logger');
-const DB        = {};
+const DB        = {
+  Sequelize : Sequelize
+};
 var sequelize;
+
+
 
 
 
@@ -58,6 +62,8 @@ function initDB (){
         DB[modelName].associate(DB);
       }
     });
+
+    DB.sequelize = sequelize;
 }
 
 
@@ -70,14 +76,17 @@ const connect = function (){
       throw new Error('[DB] Unable to connect to the DB - '+err.message);
     });
 
-}
+};
 
 
 
-DB.sequelize = sequelize;
-DB.Sequelize = Sequelize;
+
+DB.stopConnection  = function (){
+  DB.sequelize.close();
+  logger.warn('[DB] All connections to DB closed and released');
+
+};
 DB.initConnection = connect;
-
 
 
 module.exports = DB;

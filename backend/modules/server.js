@@ -184,7 +184,6 @@ Server.stop = function() {
     if (_server && typeof _server.close == 'function') {
         DB.stopConnection();
         _server.close();
-        console.log(_server.address());
         logger.warn('[Server] Web server no more listening on Port', getBindedServerPort());
         process.exit();
     } else {
