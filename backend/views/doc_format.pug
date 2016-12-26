@@ -1,93 +1,42 @@
 
 block content
+  -var requestMethod = format['request-method']
   .panel.panel-info
     .panel-heading
       h3.panel-title#format Format 
     .panel-body
-      h2 Request method
-      p HTTP requests can have different methods that essentially tell the server what type of action to take.
+      h2=format['request-method'].title
+      each val in format['request-method']['description']
+        p=val
       table.table.table-hover.table-striped
         thead
           tr.active.text-center
-            th Request method
-            th Use
-            th Response
-        tbody
-          tr
-            td GET
-            td Read data from the database
-            td Data object answering the request
-          tr
-            td POST
-            td Create new data in the database
-            td New data object as seen in the database
-          tr
-            td PUT
-            td Update a document in the database
-            td Updated data object as seen in the database
-          tr
-            td DELETE
-            td Delete an object from the database
-            td NULL
+          each head in format['request-method'].content.headers
+              th=head
+          tbody
+          each row in format['request-method'].content.body
+            tr
+            each val in row
+              td=val
 
-
-      h2 API Response Status code
-      p All requests return a JSON formatted document with a HTTP Status code. 
-      | Here is a list of Status code used for response to an API request :
+      h2=format['response-status-code'].title
+      each val in format['response-status-code']['description']
+        p=val
       table.table.table-hover.table-striped
         thead
           tr.active.text-center
-            th Status Code
-            th Name
-            th Use case
-        tbody
-          tr
-            td 200
-            td OK
-            td A successful GET or PUT request
-          tr
-            td 201
-            td Created
-            td A successful POST request
-          tr
-            td 204
-            td No content
-            td A successful DELETE request
-          tr
-            td 400
-            td Bad request
-            td An unsuccessful GET, POST, or PUT request, due to invalid content
-          tr
-            td 401
-            td Unauthorized
-            td  Requesting a restricted URL with incorrect token or none provided
-          tr
-            td 403
-            td Forbidden
-            td Making a request that isn’t allowed
-          tr
-            td 404
-            td Not found
-            td Unsuccessful request due to an incorrect parameter in the URL.
-          tr
-            td 405
-            td Method not allowed
-            td Request method not allowed for the given URL
-          tr
-            td 409
-            td Conflict
-            td  Unsuccessful POST request when another object already exists with the same data
-          tr
-            td 500
-            td Internal server error
-            td Problem with your server or the database server
-      h2 Response Data
-      p The API return always a JSON format data, one of three things for each request
-      pre
-        |{
-        |  'data'   : {}                   // Contains the result of the request
-        |  'status' : '200'               // Corresponding to the response status code
-        |  'err'    : 'Shit went down !' // Corresponding to error message with the matching status code.
-        |} 
+          each head in format['response-status-code'].content.headers
+              th=head
+          tbody
+          each row in format['response-status-code'].content.body
+            tr
+            each val in row
+              td=val
+
+
+      h2=format['response-data'].title
+      each val in format['response-data'].description
+        p=val
+      pre=format['response-data'].code.toString()
 
     

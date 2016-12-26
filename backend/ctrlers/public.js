@@ -54,6 +54,7 @@ const renderSignupPage = function(req, res) {
 };
 
 const renderDocPage = function(req, res) {
+    console.log(Object.keys(jsonDocFornat['request-method']));
     res.render('doc', { title: 'API Documentation', format: jsonDocFornat });
 };
 

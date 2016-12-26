@@ -1,5 +1,6 @@
 {
     "request-method": {
+        "title": "Request method",
         "description": [
             "HTTP requests can have different methods that essentially tell the server what type of action to take."
         ],
@@ -15,6 +16,7 @@
     },
 
     "response-status-code": {
+        "title": "API Response Status code",
         "description": [
             "All requests return a JSON formatted document with a HTTP Status code. ",
             "Here is a list of Status code used for response to an API request :"
@@ -38,8 +40,12 @@
     },
 
     "response-data": {
-        "description": ["The API return always a JSON format data, one of three things for each request"],
-        "code": "{\n\t'data'   : {}\t\t\t\t // Contains the result of the request\n\t'status' : '200'\t\t\t\t // Corresponding to the response status code\n\t'err'    : 'Shit went down !'\t\t\t\t // Corresponding to error message with the matching status code.\n\t}"
+        "title": "Response Data",
+        "description": [
+            "The API returns always a JSON format data, one of three things for each request",
+            "If an error occurs, 'data' will  be replaced by 'err' which corresponding to the status code of this error."
+        ],
+        "code": "{\n    'data'    : {} // Contains the result of the request\n    'status'  : '200' // Corresponding to the response status code\n    'err'     : 'Shit went down !' // Corresponding to error message with the matching status code.\n}"
     }
 
 }
