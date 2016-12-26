@@ -70,6 +70,7 @@ const connect = function() {
     const nbPool = nconf.get('DB_CONFIG').pool.min + ' - ' + nconf.get('DB_CONFIG').pool.max;
     logger.info('[DB] Init the DB with the pool : Client  Min - MAX. ', nbPool);
     return DB.sequelize.authenticate()
+        .then(DB.sync)
         .then(function() {
             logger.info('[DB] Connection has been established successfully.');
         }).catch(function(err) {
