@@ -36,7 +36,7 @@ const _ = require("lodash/core");
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
 const userDAO = require('../models/users');
-
+const jsonDocFornat = require("../public/cheatsheet-help.json");
 
 
 
@@ -54,7 +54,7 @@ const renderSignupPage = function(req, res) {
 };
 
 const renderDocPage = function(req, res) {
-    res.render('doc', { title: 'API Documentation' });
+    res.render('doc', { title: 'API Documentation', format: jsonDocFornat });
 };
 
 const renderAboutPage = function(req, res) {
@@ -76,10 +76,10 @@ const renderAboutPage = function(req, res) {
     });
 };
 
-const renderDashboardPage = function(req,res){
-    res.render('dashboard',{
-        'title' : 'Your API Wallet',
-        'apiID' : 'test',
+const renderDashboardPage = function(req, res) {
+    res.render('dashboard', {
+        'title': 'Your API Wallet',
+        'apiID': 'test',
         'apiKey': '915cd41e9-b16d4378fa-448ed92f-104f-585ffb8ffc13ae1770000084'
     });
 }
@@ -111,18 +111,18 @@ const errorHandler = function(req, res, next) {
 
 // Methods
 module.exports = {
-    homePage     : renderHomePage,
+    homePage: renderHomePage,
 
-    loginPage    : renderLoginPage,
+    loginPage: renderLoginPage,
 
-    signupPage   : renderSignupPage,
+    signupPage: renderSignupPage,
 
     dashboardPage: renderDashboardPage,
 
-    docPage      : renderDocPage,
+    docPage: renderDocPage,
 
-    aboutPage    : renderAboutPage,
+    aboutPage: renderAboutPage,
 
-    errorPage    : renderErrorPage,
-    errorHandler : errorHandler
+    errorPage: renderErrorPage,
+    errorHandler: errorHandler
 };

@@ -75,61 +75,56 @@ function getBindedServerPort() {
  *		- Set the error middlewares
  */
 function configServer() {
+    return DB.initConnection()
+        .then(function() {
+            var folder = path.join(__dirname, '..', 'public');
+            logger.info('[Server] Init the app(Express) with static folder :', folder);
+            _app.use(express.static(folder));
 
-    return new Promise(function (fulfill, reject){
-        //logger.info('[Server] Init the DB with the pool : MAX. Client ', DB.MAX_CLIENTS);
-        DB.initConnection();
+            folder = path.join(folder, 'img', 'favicon.ico');
+            logger.info('[Server] Init the app(Express) with the favicon :', folder);
+            _app.use(favicon(folder));
 
-        var folder = path.join(__dirname, '..', 'public');
-        logger.info('[Server] Init the app(Express) with static folder :', folder);
-        _app.use(express.static(folder));
-
-        folder = path.join(folder, 'img', 'favicon.ico');
-        logger.info('[Server] Init the app(Express) with the favicon :', folder);
-        _app.use(favicon(folder));
-
-        // View engine setup
-        folder = path.join(__dirname, '..', 'views');
-        logger.info('[Server] Init the app(Express) with views folder :', folder);
-        _app.set('views', folder);
+            // View engine setup
+            folder = path.join(__dirname, '..', 'views');
+            logger.info('[Server] Init the app(Express) with views folder :', folder);
+            _app.set('views', folder);
 
 
 
-        logger.info('[Server] Init the app(Express) with Views Engine :', ' Pug(Jade)');
-        _app.set('view engine', 'pug');
+            logger.info('[Server] Init the app(Express) with Views Engine :', ' Pug(Jade)');
+            _app.set('view engine', 'pug');
 
-        // Get port from env and store in Express.
-        // logger.info('[Server] Init the app(Express) with env Port :',nconf.get('PORT'));
-        // _app.set('port', nconf.get('PORT'));
+            // Get port from env and store in Express.
+            // logger.info('[Server] Init the app(Express) with env Port :',nconf.get('PORT'));
+            // _app.set('port', nconf.get('PORT'));
 
-        logger.info('[Server] Init the app(Express) with Logger :', 'WINSTON with morgan stream');
-        _app.use(Morgan("dev"));
-
-
-        logger.info('[Server] Init the app(Express) with BOdyParson to :', 'JSON');
-        _app.use(bodyParser.json()); // The body is parsed into JSON
-        _app.use(bodyParser.urlencoded({ extended: false })); // The JSON parsed body will only
-        // contain key-value pairs, where the value can be a string or array
-
-        logger.info('[Server] Init the app(Express) protection from some well-known web vulnerabilities :', 'helmet');
-        _app.use(helmet());
-        // _app.use(helmet.noCache());
-
-        logger.info('[Server - Route] Init the app(Express) with route for : ', '/public/*');
-        _app.use('/public', defRoute);
-
-        logger.info('[Server - Route] Init the app(Express) with route for : ', '/api/*');
-        _app.use('/api', apiRoute);
-
-        logger.info('[Server - Route] Init the app(Express) with Auth : ', 'Passport');
-        _app.use(passport.initialize());
+            logger.info('[Server] Init the app(Express) with Logger :', 'WINSTON with morgan stream');
+            _app.use(Morgan("dev"));
 
 
-        logger.info('[Server] Init done !');
+            logger.info('[Server] Init the app(Express) with BOdyParson to :', 'JSON');
+            _app.use(bodyParser.json()); // The body is parsed into JSON
+            _app.use(bodyParser.urlencoded({ extended: false })); // The JSON parsed body will only
+            // contain key-value pairs, where the value can be a string or array
 
-        fulfill();
+            logger.info('[Server] Init the app(Express) protection from some well-known web vulnerabilities :', 'helmet');
+            _app.use(helmet());
+            // _app.use(helmet.noCache());
 
-    });
+            logger.info('[Server - Route] Init the app(Express) with route for : ', '/public/*');
+            _app.use('/public', defRoute);
+
+            logger.info('[Server - Route] Init the app(Express) with route for : ', '/api/*');
+            _app.use('/api', apiRoute);
+
+            logger.info('[Server - Route] Init the app(Express) with Auth : ', 'Passport');
+            _app.use(passport.initialize());
+
+
+            logger.info('[Server] Init done !');
+
+        });
 };
 
 
