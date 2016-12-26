@@ -30,20 +30,14 @@
  * Load modules dependencies.
  */
 // Built-in
-const nconf = require('nconf');
+const _ = require("lodash/core");
 
 // Custom -Mine
 const logger = require('../modules/logger');
+const Util = require('../modules/util');
 const userDAO = require('../models/users');
 
 
-
-const checkToken = function(req,res,next){
-    // Check if token && token is mine
-    // If ok, next(true)
-    // Otherwise, throw ForbiddenError('You shall not pass ! Log in first')
-    next();
-}
 
 
 
@@ -51,38 +45,10 @@ const renderHomePage = function(req, res) {
     res.render('home', { title: 'PFE App' });
 };
 
-
-const logIn = function(req,res,next){
-    console.log(req.body);
-    // Validate the input from the req.body
-    // Sanitize & clear the input
-    // Go fecth the matching user in the DB
-    // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
-    // Put the user and this token into res.locals
-    // Call the next middleware
-    next();
-}
 const renderLoginPage = function(req, res) {
     res.render('login', { title: 'Sign in to continue' });
 };
 
-
-
-const signUp = function(req,res,next){
-    console.log(req.body);
-    // Validate the input from the req.body
-    // Sanitize & clear the input
-    // Go fecth the maching user in the DB
-    // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
-    // Put the user and this token into res.locals
-    // Call the next middleware
-    res.locals.flash = {
-        'type'  : 'success',
-        'title' : 'New User',
-        'msg'   : 'Welcome '+ + ' !\n You can go log in now.'
-    }
-    res.redirect('/public');
-}
 const renderSignupPage = function(req, res) {
     res.render('signup', { title: 'Register a new user' });
 };
@@ -90,7 +56,6 @@ const renderSignupPage = function(req, res) {
 const renderDocPage = function(req, res) {
     res.render('doc', { title: 'API Documentation' });
 };
-
 
 const renderAboutPage = function(req, res) {
     res.render('about', {
@@ -111,7 +76,6 @@ const renderAboutPage = function(req, res) {
     });
 };
 
-
 const renderDashboardPage = function(req,res){
     res.render('dashboard',{
         'title' : 'Your API Wallet',
@@ -120,14 +84,13 @@ const renderDashboardPage = function(req,res){
     });
 }
 
-
-
 const renderErrorPage = function(err, res, next) {
     // set locals, only providing error in development
     res.locals.msg = err.message;
     logger.error(err);
     res.status(err.status || 500).render('error');
 };
+
 
 /**
  * Error Handler
@@ -148,15 +111,11 @@ const errorHandler = function(req, res, next) {
 
 // Methods
 module.exports = {
-    isAuth       : checkToken,
-
     homePage     : renderHomePage,
 
     loginPage    : renderLoginPage,
-    logMe        : logIn,
 
     signupPage   : renderSignupPage,
-    registerMe   : signUp,
 
     dashboardPage: renderDashboardPage,
 

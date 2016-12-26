@@ -33,7 +33,7 @@ const path = require('path');
 const Morgan = require('morgan');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-
+const passport = require('passport');
 
 // Custom - Mine
 const DB = require("../models/index")
@@ -75,6 +75,7 @@ function getBindedServerPort() {
  *		- Set the error middlewares
  */
 function configServer() {
+
     return new Promise(function (fulfill, reject){
         //logger.info('[Server] Init the DB with the pool : MAX. Client ', DB.MAX_CLIENTS);
         DB.initConnection();
@@ -119,6 +120,10 @@ function configServer() {
 
         logger.info('[Server - Route] Init the app(Express) with route for : ', '/api/*');
         _app.use('/api', apiRoute);
+
+        logger.info('[Server - Route] Init the app(Express) with Auth : ', 'Passport');
+        _app.use(passport.initialize());
+
 
         logger.info('[Server] Init done !');
 

@@ -31,6 +31,7 @@ const router = require('express').Router();
 
 // Custom -mine
 const publicCtrl = require('../ctrlers/public');
+const authCtrl = require('../ctrlers/auth');
 
 
 router.use((req, res, next) => {
@@ -45,13 +46,13 @@ router.get(['/', '/home'], publicCtrl.homePage);
 /* GET-POST login page. */
 router.route('/login')
     .get(publicCtrl.loginPage)
-    .post(publicCtrl.logMe,publicCtrl.dashboardPage);
+    .post(authCtrl.logMe);
 
 
 /* GET-POST signup page. */
 router.route('/signup')
     .get(publicCtrl.signupPage)
-    .post(publicCtrl.registerMe);
+    .post(authCtrl.registerMe);
 
 
 /* GET signup page. */
@@ -61,7 +62,7 @@ router.get('/about', publicCtrl.aboutPage);
 router.get(['/doc', '/documentation'], publicCtrl.docPage);
 
 /* GET Dashboard page. */
-router.get(['/keys', '/manage'], [publicCtrl.isAuth,publicCtrl.dashboardPage]);
+router.get(['/keys', '/manage'], [authCtrl.isLogged,publicCtrl.dashboardPage]);
 
 
 
