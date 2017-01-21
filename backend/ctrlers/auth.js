@@ -39,6 +39,21 @@ const userDAO = require('../models/users');
 
 
 
+
+/**
+ * Check if this API call is auth
+ *
+ */
+const isAuth = function(req,res,next){
+    // Check if req.headers || req.body contains a api-key
+    // If not, check if req.headers || req.body contains a token
+    // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
+
+}
+isAuth.unless = unless;
+
+
+
 /**
  * Check the token given
  *
@@ -56,30 +71,18 @@ const checkToken = function(req,res,next){
 
 
 
-
-/**
- * Check if this API call is auth
- *
- */
-const isAuth = function(req,res,next){
-    // Check if req.headers || req.body contains a api-key
-    // If not, check if req.headers || req.body contains a token
-    // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
-
-}
-isAuth.unless = unless;
-
-
-
 const logIn = function(req,res,next){
     console.log(req.body);
+    // { mail: 'Sincere@april.biz',pwd: 'Welcome',confirmPwd: 'Welcome' }
+    
     // Validate the input from the req.body
     // Sanitize & clear the input
     // Go fecth the matching user in the DB
     // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
     // Put the user and this token into res.locals
     // Call the next middleware
-    next();
+
+     return next();
 };
 
 
@@ -92,11 +95,8 @@ const signUp = function(req,res,next){
     // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
     // Put the user and this token into res.locals
     // Call the next middleware
-    res.locals.flash = {
-        'type'  : 'success',
-        'title' : 'New User',
-        'msg'   : 'Welcome '+ + ' !\n You can go log in now.'
-    }
+
+    return next();
 }
 
 

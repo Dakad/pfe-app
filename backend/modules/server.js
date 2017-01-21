@@ -100,7 +100,7 @@ function configServer() {
             // _app.set('port', nconf.get('PORT'));
 
             logger.info('[Server] Init the app(Express) with Logger :', 'WINSTON with morgan stream');
-            _app.use(Morgan("dev"));
+            _app.use(Morgan("short"));
 
 
             logger.info('[Server] Init the app(Express) with BOdyParson to :', 'JSON');

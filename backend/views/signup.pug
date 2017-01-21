@@ -17,11 +17,11 @@ block content
               .input-group-addon
                 i.fa.fa-at(aria-hidden="true")
               input.form-control#email(
-                    type="text"
-                    name='username'
-                    placeholder="Email" 
+                    type="email"
+                    name='mail'
+                    placeholder="Email"
                     required autofocus)
-                    
+
           .form-group.required
             label.ctrl-label(for='pwd') Password :
             .input-group
@@ -30,9 +30,9 @@ block content
               input.form-control#pwd(
                     type="password"
                     name="pwd"
-                    placeholder="Password" 
+                    placeholder="Password"
                     required)
-                            
+
           .form-group.required
             label.ctrl-label(for='pwd2') Comfirm Password :
             .input-group
@@ -40,12 +40,12 @@ block content
                 i.fa.fa-lock(aria-hidden="true")
               input.form-control#pwd(
                     type="password"
-                    name="confirm_pwd"
-                    placeholder="Password again ... " 
+                    name="confirmPwd"
+                    placeholder="Password again ... "
                     required)
           .checkbox.pull-left
             label
-              input(type="checkbox" value="log-again") 
+              input(type="checkbox" name="agree"  value="true")
               | Read & agree to the Terms of service and Privacy policy
           .form-group
             button.btn.btn-lg.btn-success.btn-block(type="submit") Sign up

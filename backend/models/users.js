@@ -2,7 +2,9 @@
 
 const nconf = require("nconf");
 
-module.exports = function(sequelize, DataTypes) {
+
+
+const UserModel = function(sequelize, DataTypes) {
   var Users = sequelize.define('Users', {
     email: {
       type:DataTypes.STRING,
@@ -25,6 +27,14 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     comment: "Contains all users registred into the app.",
 
+    classMethods: {
+      associate: function(models) {
+        Users.hasOne(models.Boxes,{
+          onDelete: "CASCADE"
+        })
+      }
+    },
+
     // Add the timestamp attributes (updatedAt, createdAt, deletedAt) to database entries
     timestamps: true,
 
@@ -38,13 +48,12 @@ module.exports = function(sequelize, DataTypes) {
     // Set to true or a string with the attribute name you want to use to enable.
     version: true,
 
-    schema:nconf.get('DATABASE_SCHEMA') || 'public',
+    schema:nconf.get('DATABASE_SCHEMA') || 'public'
 
-    classMethods: {
-      associate: function(models) {
-        Users.hasOne(models.Boxes)
-      }
-    }
   });
   return Users;
 };
+
+
+
+module.exports = UserModel;

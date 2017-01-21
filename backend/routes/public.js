@@ -47,16 +47,20 @@ router.get(['/', '/home'], publicCtrl.homePage);
 /* GET-POST login page. */
 router.route('/login')
     .get(publicCtrl.loginPage)
-    .post(authCtrl.logMe);
+    .post([publicCtrl.loginPosted,authCtrl.logMe, publicCtrl.afterLogin]);
 
 
 /* GET-POST signup page. */
 router.route('/signup')
     .get(publicCtrl.signupPage)
-    .post(authCtrl.registerMe);
+    .post([publicCtrl.signPosted,authCtrl.registerMe,publicCtrl.signupPage]);
+    
+/* GET about page. */
+router.get('/logout', publicCtrl.logMeOut);
 
 
-/* GET signup page. */
+
+/* GET about page. */
 router.get('/about', publicCtrl.aboutPage);
 
 /* GET documentation page. */

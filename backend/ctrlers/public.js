@@ -33,7 +33,9 @@
 // Built-in
 const _ = require("lodash/core");
 
-// Custom -Mine
+
+// Custom - Mine
+const ApiError = require('../modules/api-error');
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
 const userDAO = require('../models/users');
@@ -55,13 +57,22 @@ const renderSignupPage = function(req, res) {
 };
 
 const renderDocPage = function(req, res) {
-    res.render('doc', { title: 'API Documentation', format: jsonDocFormat, urlApi: res.locals.host + '/api/v1' });
+    res.render('doc', { 
+        title: 'API Documentation', 
+        format: jsonDocFormat, 
+        urlApi: res.locals.host + '/api/v1' 
+    });
 };
 
 
 const renderExePage = function(req, res) {
     res.render('exe', { title: 'Little training before the project' });
 };
+
+const logout = function (rq,res) {
+    res.locals.isAuth = false;
+    res.redirect('home');
+}
 
 
 
@@ -100,12 +111,71 @@ const renderErrorPage = function(err, res, next) {
 };
 
 
+
+
+
+/**
+ * Route for POST
+ */
+
+ const checkLoginPosted = function(req,res,next){
+    if(!req.body)
+        return next(new ApiError(400,'Missing information on the user to be logged'));
+    if(!req.body.mail)
+        return next(new ApiError(400,'Missing the mail to be logged'));
+    if(!req.body.pwd)
+        return next(new ApiError(400,'Missing the password to be logged'));
+
+    return next();
+ }
+
+const afterLoginChecked = function (req,res) {
+    res.locals.isAuth = true;
+    res.redirect('manage');
+}
+
+
+ const checkSignPosted = function(req,res,next){
+
+    if(!req.body)
+        return next(new ApiError(400,'Missing information on the user to be registred'));
+    if(!req.body.mail)
+        return next(new ApiError(400,'Missing the mail to be registred'));
+    if(!req.body.pwd)
+        return next(new ApiError(400,'Missing the password to be registred'));
+    if(!req.body.confirmPwd)
+        return next(new ApiError(400,'Missing the confirmation password to be registred'));
+    if(req.body.pwd !== req.body.confirmPwd)
+        return next(new ApiError(400,'The two input passwords are differents'));
+    if(!req.body.agree)
+        return next(new ApiError(400,'Missing the agreement confirmation checked to be registred'));
+
+     return next();
+ }
+
+
+const afterSignChecked = function (req,res,next) {
+    res.locals.flash = {
+        'type'  : 'success',
+        'title' : 'New User',
+        'msg'   : 'Welcome onboard !\n You can go log in now.'
+    }
+
+    res.render('login');
+}
+
+
+
+
 /**
  * Error Handler
  */
-const errorHandler = function(req, res, next) {
-    const err = new Error('Not Found - Something went south');
-    err.status = 404;
+const errorHandler = function(err, req, res, next) {
+    if(!err)
+        err = new Error('Not Found - Something went south');
+    if(!err.status)
+        err.status = 404;
+
     renderErrorPage(err, res);
 }
 
@@ -122,8 +192,14 @@ module.exports = {
     homePage: renderHomePage,
 
     loginPage: renderLoginPage,
+    loginPosted : checkLoginPosted,
+    afterLogin : afterLoginChecked,
+
+    logMeOut: logout,
 
     signupPage: renderSignupPage,
+    signPosted : checkSignPosted,
+    afterSignin : afterSignChecked,
 
     dashboardPage: renderDashboardPage,
 
