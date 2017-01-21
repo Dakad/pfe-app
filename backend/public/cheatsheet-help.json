@@ -8,8 +8,7 @@
             "headers": ["Request method", "Use", "Response"],
             "body": [
                 ["GET", "Read data from the database", "Data object answering the request "],
-                ["POST", "Create new data in the database", "New data object as seen in the database "],
-                ["PUT", "Update a document in the database", "Updated data object as seen in the database"],
+                ["POST", "Create a new or Update data in the database", "New/Updated data object as seen in the database"],
                 ["DELETE", "Delete an object from the database", "NULL"]
             ]
         }

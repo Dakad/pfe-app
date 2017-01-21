@@ -17,6 +17,7 @@
  *		+ renderSignupPage()
  *		+ renderAboutPage()
  *		+ renderDocPage()
+ *		+ renderExePage()
  *		+ renderDashboardPage()
  *		+ renderErrorPage()
  *		+ errorHandler()

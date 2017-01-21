@@ -31,8 +31,9 @@ block content
           h3.panel-title#auth Authentication 
         .panel-body
           p All requests through the API require a token. You can get your API token by register into our application.
-          p Your token must be included into each HTTP Header request by 
-            code X-Authorization-Key : Bearer <#[i your-access-token]>
+          p Your token must be included into each HTTP Header request by :
+          p
+            code Authorization : Bearer <#[i your-access-token]>
           p
             if user && user.token
               Your access token is : #[b #{user}]

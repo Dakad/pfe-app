@@ -13,10 +13,10 @@
  *      /   --> publicCtrl.homePage
  *  home/  --> publicCtrl.aboutPage
  *  about/  --> publicCtrl.aboutPage
+ *  doc/    --> publicCtrl.docPage
+ *  exe/    --> publicCtrl.trainingPage
  *  login/  --> publicCtrl.loginPage
  *  signup/ --> publicCtrl.signupPage
- *  doc/    --> /
- *  documentation/ --> publicCtrl.signupPage
  *
  *
  * =============================
@@ -36,6 +36,7 @@ const authCtrl = require('../ctrlers/auth');
 
 router.use((req, res, next) => {
     res.locals.currentUrl = req.path;
+    res.locals.host = req.get('host');
     next();
 })
 
@@ -65,7 +66,7 @@ router.get(['/exe', '/training'], publicCtrl.trainingPage);
 router.get(['/doc', '/documentation'], publicCtrl.docPage);
 
 /* GET Dashboard page. */
-router.get(['/keys', '/manage'], [authCtrl.isLogged,publicCtrl.dashboardPage]);
+router.get(['/keys', '/manage'], [authCtrl.isLogged, publicCtrl.dashboardPage]);
 
 
 
