@@ -55,7 +55,7 @@ const renderSignupPage = function(req, res) {
 };
 
 const renderDocPage = function(req, res) {
-    res.render('doc', { title: 'API Documentation', format: jsonDocFormat });
+    res.render('doc', { title: 'API Documentation', format: jsonDocFormat, urlApi: res.locals.host + '/api/v1' });
 };
 
 

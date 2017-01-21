@@ -36,7 +36,7 @@ const authCtrl = require('../ctrlers/auth');
 
 router.use((req, res, next) => {
     res.locals.currentUrl = req.path;
-    res.locals.host = req.get('host');
+    res.locals.host = req.protocol + '://' + req.get('host');
     next();
 })
 
