@@ -8,11 +8,15 @@ module.exports = function(sequelize, DataTypes) {
       type:DataTypes.STRING,
       allowNull : false,
       unique : true,
-      validate: { isEmail : true}
+      validate: {notNull:true, notEmpty:true,isEmail : true}
     },
     name : DataTypes.STRING,
     salt: DataTypes.STRING,
-    pwd: DataTypes.STRING,
+    email: {
+      type:DataTypes.TEXT,
+      allowNull : false,
+      validate: {notNull:true, notEmpty:true}
+    },
     isAdmin:{
       type :DataTypes.BOOLEAN,
       defaultValue : false

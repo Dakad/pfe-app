@@ -59,6 +59,9 @@ router.route('/signup')
 router.get('/about', publicCtrl.aboutPage);
 
 /* GET documentation page. */
+router.get(['/exe', '/training'], publicCtrl.trainingPage);
+
+/* GET documentation page. */
 router.get(['/doc', '/documentation'], publicCtrl.docPage);
 
 /* GET Dashboard page. */

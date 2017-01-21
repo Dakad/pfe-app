@@ -1,5 +1,5 @@
 {
-    "request-method": {
+    "requestMethod": {
         "title": "Request method",
         "description": [
             "HTTP requests can have different methods that essentially tell the server what type of action to take."
@@ -15,7 +15,7 @@
         }
     },
 
-    "response-status-code": {
+    "responseStatusCode": {
         "title": "API Response Status code",
         "description": [
             "All requests return a JSON formatted document with a HTTP Status code. ",
@@ -28,7 +28,7 @@
                 ["201", "Created", "A successful POST request"],
                 ["204", "No content", "A successful DELETE request"],
                 ["400", "Bad request", "An unsuccessful GET, POST, or PUT request, due to invalid content"],
-                ["401", "Unauthorized", "Requesting a restricted URL with incorrect token or none provided"],
+                ["401", "Unauthorized", "Requesting a restricted URL with incorrect auth-token or none provided"],
                 ["403", "Forbidden", "Making a request that isn’t allowed"],
                 ["404", "Not found", "Unsuccessful request due to an incorrect parameter in the URL."],
                 ["405", "Method not allowed", "Request method not allowed for the given URL"],
@@ -39,7 +39,7 @@
 
     },
 
-    "response-data": {
+    "responseData": {
         "title": "Response Data",
         "description": [
             "The API returns always a JSON format data, one of three things for each request",

@@ -36,7 +36,7 @@ const _ = require("lodash/core");
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
 const userDAO = require('../models/users');
-const jsonDocFornat = require("../public/cheatsheet-help.json");
+const jsonDocFormat = require("../public/cheatsheet-help.json");
 
 
 
@@ -54,8 +54,15 @@ const renderSignupPage = function(req, res) {
 };
 
 const renderDocPage = function(req, res) {
-    res.render('doc', { title: 'API Documentation', format: jsonDocFornat });
+    res.render('doc', { title: 'API Documentation', format: jsonDocFormat });
 };
+
+
+const renderExePage = function(req, res) {
+    res.render('exe', { title: 'Little training before the project' });
+};
+
+
 
 const renderAboutPage = function(req, res) {
     res.render('about', {
@@ -120,6 +127,8 @@ module.exports = {
     dashboardPage: renderDashboardPage,
 
     docPage: renderDocPage,
+
+    trainingPage: renderExePage,
 
     aboutPage: renderAboutPage,
 
