@@ -22,9 +22,9 @@
  */
 
 // Custom
-var Config = require('./modules/config.js');
-var Server = require('./modules/server.js');
-var Logger = require('./modules/logger.js');
+const Config = require('./modules/config.js');
+const Server = require('./modules/server.js');
+const Logger = require('./modules/logger.js');
 
 
 

@@ -10,31 +10,37 @@ block content
       .login-panel
         img.img-avatar(src="/img/avatar_login.png"  alt="Avatar for login")/
         form.form-login(method='POST')
-          .form-group
-            label(for='email') Email address :
-            .input-group
+          .form-group.required
+            label.ctrl-label(for='email') Email address :
+            if(errors && errors.email)
+              span#helpBlock.help-block.text-danger=errors.email.msg
+            .input-group(class=errors && errors.email? 'has-error':undefined)
               .input-group-addon
                 i.fa.fa-at(aria-hidden="true")
               input.form-control#email(
                     type="email"
-                    name='mail'
+                    name='email'
                     placeholder="Email"
+                    value=input && input.email? input.email.value:undefined
                     required autofocus)
 
-          .form-group
-            label(for='pwd') Password :
-            .input-group
+          .form-group.required
+            label.ctrl-label(for='pwd') Password :
+            if(errors && errors.pwd)
+              span#helpBlock.help-block.text-danger=errors.pwd.msg
+            .input-group(class=errors && errors.pwd? 'has-error':undefined)
               .input-group-addon
                 i.fa.fa-lock(aria-hidden="true")
               input.form-control#pwd(
                     type="password"
                     name="pwd"
                     placeholder="Password"
+                    value=input && input.pwd? input.pwd.value:undefined
                     required)
 
           .checkbox.pull-left
           label
-            input(type="checkbox" name="log-again" value="yes")
+            input(type="checkbox" name="rememberMe" value="yes")
             |  Remember me
           .form-group
           button.btn.btn-lg.btn-success.btn-block(type="submit") Sign in

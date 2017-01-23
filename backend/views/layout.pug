@@ -2,10 +2,14 @@ doctype html
 html(lang='en')
   include ./partials/_head
   body
-    include ./partials/_header
+  
+    include ./partials/_navbar-header
 
     .container
-      include ./partials/_flash-msg
+      if(messages)
+        .row.clearfix
+          != messages('./partials/_flash-msg', locals)
       block content
+
 
     include ./partials/_footer

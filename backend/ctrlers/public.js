@@ -35,12 +35,19 @@ const _ = require("lodash/core");
 
 
 // Custom - Mine
-const ApiError = require('../modules/api-error');
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
-const userDAO = require('../models/users');
-const jsonDocFormat = require("../public/cheatsheet-help.json");
+const DB = require('../models');
+const jsonDocFormat = require("../public/cheatsheet-help");
 
+
+const COOKIE_OPTIONS = {
+    maxAge      : new Date(Date.now() + 900000),
+    httpOnly    : true,
+    signed      : true,
+    //expires: new Date(Date.now() + (24 *  1000 * 60 * 60 * 24)),
+    expires     : new Date(Date.now() + 900000),
+}
 
 
 
@@ -57,19 +64,20 @@ const renderSignupPage = function(req, res) {
 };
 
 const renderDocPage = function(req, res) {
-    res.render('doc', { 
-        title: 'API Documentation', 
-        format: jsonDocFormat, 
-        urlApi: res.locals.host + '/api/v1' 
+    res.render('doc', {
+        title: 'API Documentation',
+        format: jsonDocFormat,
+        urlApi: req.protocol + '://' + req.get('host') + '/api/v1'
     });
 };
-
 
 const renderExePage = function(req, res) {
     res.render('exe', { title: 'Little training before the project' });
 };
 
-const logout = function (rq,res) {
+const logout = function (req,res) {
+    req.clearCookies();
+    req.session = null; // Destroy session
     res.locals.isAuth = false;
     res.redirect('home');
 }
@@ -96,16 +104,20 @@ const renderAboutPage = function(req, res) {
 };
 
 const renderDashboardPage = function(req, res) {
-    res.render('dashboard', {
+    // Go fetch the real boxes for this user
+    return res.render('dashboard', {
         'title': 'Your API Wallet',
-        'apiID': 'test',
+        'apiId': 'test',
         'apiKey': '915cd41e9-b16d4378fa-448ed92f-104f-585ffb8ffc13ae1770000084'
     });
 }
 
 const renderErrorPage = function(err, res, next) {
     // set locals, only providing error in development
+    res.locals.err = err;
     res.locals.msg = err.message;
+    res.locals.status = err.status;
+    res.locals.title = err.title || 'Error'
     logger.error(err);
     res.status(err.status || 500).render('error');
 };
@@ -119,47 +131,57 @@ const renderErrorPage = function(err, res, next) {
  */
 
  const checkLoginPosted = function(req,res,next){
-    if(!req.body)
-        return next(new ApiError(400,'Missing information on the user to be logged'));
-    if(!req.body.mail)
-        return next(new ApiError(400,'Missing the mail to be logged'));
-    if(!req.body.pwd)
-        return next(new ApiError(400,'Missing the password to be logged'));
+    req.checkBody('email', 'Missing the email to be logged in').notEmpty();
+    req.checkBody('email', 'Put a valid email to be logged in').isEmail();
+    req.checkBody('pwd', 'Missing the password to be logged in').notEmpty();
 
-    return next();
+    req.getValidationResult().then(function(result) {
+        res.locals.errors = result.mapped();
+        if(result.isEmpty())
+            next() ;
+    });
  }
 
 const afterLoginChecked = function (req,res) {
-    res.locals.isAuth = true;
+    // Check if re.body.remember is check
+    // then create a cookie and store
+    if(req.body.rememberMe)
+        // Save the token in req.locals.accesToken intro cookie['acccess_token']
+        res.cookie('acccess_token',req.user.token,COOKIE_OPTIONS);
+
+    console.log(req.user);
+
+
+    res.cookie('isAuth', true, COOKIE_OPTIONS);
+    // req.flash('success','Welcome back !.');
     res.redirect('manage');
 }
 
 
- const checkSignPosted = function(req,res,next){
 
-    if(!req.body)
-        return next(new ApiError(400,'Missing information on the user to be registred'));
-    if(!req.body.mail)
-        return next(new ApiError(400,'Missing the mail to be registred'));
-    if(!req.body.pwd)
-        return next(new ApiError(400,'Missing the password to be registred'));
-    if(!req.body.confirmPwd)
-        return next(new ApiError(400,'Missing the confirmation password to be registred'));
-    if(req.body.pwd !== req.body.confirmPwd)
-        return next(new ApiError(400,'The two input passwords are differents'));
-    if(!req.body.agree)
-        return next(new ApiError(400,'Missing the agreement confirmation checked to be registred'));
 
-     return next();
- }
+
+const checkSignPosted = function(req,res,next){
+    req.checkBody('email', 'Missing the email to be registred').notEmpty();
+    req.checkBody('email', 'Put a valid email to be registred').isEmail();
+    req.checkBody('pwd', 'Missing the password to be registred').notEmpty();
+    //req.checkBody('pwd', '6 to 20 characters required').len(6, 20);
+    req.checkBody('pwd2', 'Missing the confirmation password to be registred').notEmpty();
+    req.checkBody('pwd2', 'The two input passwords are differents').equals(req.body.pwd);
+    //req.checkBody('pwd2', '6 to 20 characters required').len(6, 20);
+    req.checkBody('agree', 'Missing the agreement confirmation checked to be registred').notEmpty().equals('true');
+
+    req.getValidationResult().then(function(result) {
+        res.locals.errors = result.mapped();
+        return (!result.isEmpty()) ? renderSignupPage(req,res) :  next() ;
+    });
+
+}
 
 
 const afterSignChecked = function (req,res,next) {
-    res.locals.flash = {
-        'type'  : 'success',
-        'title' : 'New User',
-        'msg'   : 'Welcome onboard !\n You can go log in now.'
-    }
+
+    req.flash('success','Welcome onboard !\n You can go log in now.');
 
     res.render('login');
 }

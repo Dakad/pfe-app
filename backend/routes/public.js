@@ -27,18 +27,50 @@
  * Load modules dependencies.
  */
 // Built-in
-const router = require('express').Router();
+const nconf = require('nconf');
+const express = require('express');
+const router = express.Router();
+const flash = require('connect-flash');
+const expresMessages = require('express-messages');
+const cookieParser  = require('cookie-parser')
+const cookieSession = require('cookie-session')
+
 
 // Custom -mine
 const publicCtrl = require('../ctrlers/public');
 const authCtrl = require('../ctrlers/auth');
 
 
+
+
+
+
+router.init = function (){
+    router.use(flash());
+
+
+    router.use(cookieParser(nconf.get('COOKIE_SECRET')));
+
+    router.use(cookieSession({
+        keys : [ nconf.get('COOKIE_SECRET')],
+        secret : nconf.get('COOKIE_SECRET'),
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
+        httpOnly : true,
+    }));
+
+}
+
+
+// First Middleware to handle an incoming request
 router.use((req, res, next) => {
+
     res.locals.currentUrl = req.path;
-    res.locals.host = req.protocol + '://' + req.get('host');
+    res.locals.input = req.body;
+//    res.locals.messages = expresMessages(req,res);
     next();
-})
+});
+
+
 
 /* GET home page. */
 router.get(['/', '/home'], publicCtrl.homePage);
@@ -50,11 +82,12 @@ router.route('/login')
     .post([publicCtrl.loginPosted,authCtrl.logMe, publicCtrl.afterLogin]);
 
 
+
 /* GET-POST signup page. */
 router.route('/signup')
     .get(publicCtrl.signupPage)
     .post([publicCtrl.signPosted,authCtrl.registerMe,publicCtrl.signupPage]);
-    
+
 /* GET about page. */
 router.get('/logout', publicCtrl.logMeOut);
 
@@ -77,8 +110,10 @@ router.get(['/keys', '/manage'], [authCtrl.isLogged, publicCtrl.dashboardPage]);
 // catch 404 and forward to error handler
 router.use(publicCtrl.errorHandler);
 
+
 // Last middleware -- Error handler - What to do when a error occurs
 router.use(publicCtrl.errorPage);
+
 
 
 /**

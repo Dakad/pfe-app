@@ -44,6 +44,7 @@ const DB = {
 function initSequelize() {
     DB.sequelize = new Sequelize(nconf.get('DATABASE_URL'), nconf.get('DB_CONFIG'));
 
+
     fs.readdirSync(__dirname)
         .filter(function(file) {
             // Check : not hidden files || index && .js file
@@ -71,7 +72,8 @@ const connect = function() {
     const nbPool = nconf.get('DB_CONFIG').pool.min + ' - ' + nconf.get('DB_CONFIG').pool.max;
     logger.info('[DB] Init the DB with the pool : Client  Min - MAX. ', nbPool);
     return DB.sequelize.authenticate()
-        .then(DB.sync) // Create all tables if they doesn't exist in database
+    //      .then(function() {DB.sequelize.sync({force:true})})
+        .then(function() {DB.sequelize.sync({logging:false})}) // Create all tables if they doesn't exist in database
         .then(function() {
             const urlDB = nconf.get('DATABASE_USER') +'@'+nconf.get('DATABASE_SERVER')+  '~'+nconf.get('DATABASE_NAME');
             logger.info('[DB] Connection has been established successfully to :',urlDB);

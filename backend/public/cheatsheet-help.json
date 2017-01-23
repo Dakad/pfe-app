@@ -44,7 +44,7 @@
             "The API returns always a JSON format data, one of three things for each request",
             "If an error occurs, 'data' will  be replaced by 'err' which corresponding to the status code of this error."
         ],
-        "code": "{\n    'data'    : {} // Contains the result of the request\n    'status'  : '200' // Corresponding to the response status code\n    'err'     : 'Shit went down !' // Corresponding to error message with the matching status code.\n}"
+        "code": "{\n    'data'    : {} // Contains the result of the request\n    'status'  : '200' // Corresponding to the response status code\n    'err'     : 'Shit went down !' // Error object with the matching status code and message.\n}"
     }
 
 }

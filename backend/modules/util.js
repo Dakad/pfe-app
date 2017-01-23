@@ -2,9 +2,14 @@
 
 const crypto =  require('crypto');
 const Promise = require('promise');
+const nconf = require("nconf");
 const Validator = require('validator');
 const _= require('lodash/core');
 const jwt = require('jsonwebtoken');
+const shortId = require("shortid")
+
+shortId.characters('0123456789@bcdefghijklmnopqrstuµvwxyz_AßCD€FGH!JKLMNOPQR$TUVWXYZ');
+
 
 
 const checkInput = function(input){
@@ -14,20 +19,20 @@ const checkInput = function(input){
         if (Validator.isEmpty(input.email)) {
             errors.email = 'Must provide an Email';
         }else{
-            if (!Validator.isEmail(input.email)) {
+            if (!Validator.isEmail(input.email))
                 errors.email = 'Your email is invalid';
-            }
         }
 
-        if (Validator.isEmpty(input.pwd)) {
+        if (Validator.isEmpty(input.pwd))
             errors.pwd = 'Must provide your password';
-        }
 
         if (input.pwd2 && Validator.isEmpty(input.pwd2)) {
             errors.pwd2 = 'Must provide your password confirmation';
+        }else{
+            if(input.pwd2 && !Validator.equals(input.pwd,input.pwd2))
+                errors.pwd = 'Must provide your password confirmation';
         }
-
-        return (_.isEmpty(errors) ? reject(errors) :  fulfill(true));
+        return (_.isEmpty(errors) ? fulfill(true) :  reject(errors));
     });
 
 };
@@ -39,6 +44,7 @@ const checkToken = function(token) {
 
 
 const generateToken = function (claims,secret) {
+    secret = ( (!secret) ? nconf.get('TOKEN_SECRET') : secret);
     return new Promise(function (fulfill) {
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 21); // Valid for 21 days
@@ -63,7 +69,7 @@ const generateSalt = function (){
  * Hash the password with a givem salt.
  *
  */
-const hashPassword = function (salt,pwd) {
+const hashPassword = function (pwd,salt) {
     return Promise.resolve(crypto.pbkdf2Sync(pwd, salt, 1000,64).toString('hex'))
 }
 
@@ -74,13 +80,14 @@ const hashPassword = function (salt,pwd) {
  *
  */
 const validPassword = function (pwd,salt,hashPassword) {
-    return new Promise(function (fulfill, reject) {
-        var hash = crypto.pbkdf2Sync(pwd, salt, 1000, 64).toString('hex');
-        return (_.isEqual(hash,hashPassword) ? fulfill(true) : reject(new Error('Not valid password')));
+    return new Promise(function (fulfill) {
+        return fulfill(_.isEqual(hashPassword,crypto.pbkdf2Sync(pwd, salt, 1000, 64).toString('hex')));
     });
 }
 
-
+const generateShortUUID = function(){
+    return shortId.generate();
+}
 
 
 
@@ -90,6 +97,14 @@ module.exports = {
     generateToken : generateToken
     ,
     valideToken : checkToken
+    ,
+    generateSalt : generateSalt
+    ,
+    generateShortUUID : generateShortUUID
+    ,
+    hashPassword : hashPassword
+    ,
+    validPassword : validPassword
 }
 
 

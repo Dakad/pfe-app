@@ -33,7 +33,9 @@ const path = require('path');
 const Morgan = require('morgan');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-const passport = require('passport');
+const expressValidator = require('express-validator');
+const cookieParser  = require('cookie-parser')
+
 
 // Custom - Mine
 const DB = require("../models/index")
@@ -77,7 +79,7 @@ function getBindedServerPort() {
 function configServer() {
     return DB.initConnection()
         .then(function() {
-            var folder = path.join(__dirname, '..', 'public');
+            let folder = path.join(__dirname, '..', 'public');
             logger.info('[Server] Init the app(Express) with static folder :', folder);
             _app.use(express.static(folder));
 
@@ -103,23 +105,32 @@ function configServer() {
             _app.use(Morgan("short"));
 
 
-            logger.info('[Server] Init the app(Express) with BOdyParson to :', 'JSON');
+            logger.info('[Server] Init the app(Express) with BOdyParser to :', 'JSON');
             _app.use(bodyParser.json()); // The body is parsed into JSON
             _app.use(bodyParser.urlencoded({ extended: false })); // The JSON parsed body will only
-            // contain key-value pairs, where the value can be a string or array
+                // contain key-value pairs, where the value can be a string or array
+
+
+
+            _app.use(expressValidator());
 
             logger.info('[Server] Init the app(Express) protection from some well-known web vulnerabilities :', 'helmet');
-            _app.use(helmet());
+            //_app.use(helmet());
             // _app.use(helmet.noCache());
-
-            logger.info('[Server - Route] Init the app(Express) with route for : ', '/public/*');
-            _app.use('/public', defRoute);
 
             logger.info('[Server - Route] Init the app(Express) with route for : ', '/api/*');
             _app.use('/api', apiRoute);
 
-            logger.info('[Server - Route] Init the app(Express) with Auth : ', 'Passport');
-            _app.use(passport.initialize());
+
+            logger.info('[Server - Route] Init the app(Express) with route for : ', '/public/*');
+            defRoute.init();
+            logger.info('[Server] Init route /public with CookieParser ');
+            _app.use('/public',cookieParser(nconf.get('COOKIE_SECRET')));
+            
+            _app.use('/public', defRoute);
+
+
+
 
 
             logger.info('[Server] Init done !');
