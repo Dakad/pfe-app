@@ -12,6 +12,7 @@ const SimpleError = require('simple-error');
 const getError = function (status,msg) {
     let _status = 404 , _msg = jsonApiResponse['404'];
 
+    console.log(this.status);
     // Check for status provided ?
     if(status){
         _status = (status instanceof Error) ? 404 : status;

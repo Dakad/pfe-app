@@ -138,12 +138,6 @@ function configServer() {
  */
 function configRoutes() {
     return new Promise(function(fulfill) {
-        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/*', '/public/*');
-        logger.info('[Server - Routes] Init route / with CookieParser ');
-        _app.use('/', cookieParser(nconf.get('COOKIE_SECRET')));
-        _app.use('/', defRoute);
-        _app.use('/public', defRoute);
-        defRoute.init();
 
         logger.info('[Server - Routes] Init the app(Express) with route for : ', '/oauth/*');
         _app.use('/oauth', oauthRoute);
@@ -154,7 +148,16 @@ function configRoutes() {
         apiRoute.init();
 
 
+
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/*', '/public/*');
+        logger.info('[Server - Routes] Init route / with CookieParser ');
+        _app.use('/', cookieParser(nconf.get('COOKIE_SECRET')));
+        _app.use('/public', defRoute);
+        _app.use('/', defRoute);
+        defRoute.init();
+
         logger.info('[Server - Routes] Init done !');
+
         fulfill();
     });
 

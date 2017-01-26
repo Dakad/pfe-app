@@ -50,34 +50,22 @@ const DB = require('../models');
  *
  */
 const isAuth = function(req,res,next){
-    console.log(req.cookies);
-    // Check if req.headers || req.body contains a api-key
+    const cookies = req.signedCookies;
     // If not, check if req.headers || req.body contains a token
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
+    if(!(cookies.isAuth && cookies.accessToken))
+        return next(new ApiError.Unauthorized('You shall not pass ! Log in before to access this page !'));
+    Util.validToken(cookies.accessToken).then(function(decodedToken){
+        req.user = decodedToken;
+        res.locals.isAuth = true;
+        next();
+    }).catch(function (err) {
+        res.locals.isAuth = false;
+        console.error(err);
+    })
 
-    next();
 }
-
-// isAuth.unless = unless;
-
-
-
-/**
- * Check the token given
- *
- */
-const checkToken = function(req,res,next){
-//    console.log(req.headers);
-    if(!_.isEmpty('')) {
-
-    }
-    // Check if token && token is mine
-    // If ok, next(true)
-    // Otherwise, throw ForbiddenError('You shall not pass ! Log in first')
-    next();
-}
-
-
+isAuth.unless = unless;
 
 const logIn = function(req,res,next){
     const user = req.body;
@@ -86,27 +74,28 @@ const logIn = function(req,res,next){
         // Sanitize & clear the input
         req.sanitizeBody('email').normalizeEmail();
         // Go fecth the corresponding user in DB
-        return DB.Users
-            .find({
-                attributes : ["email", "name", "salt", "pwd", "isAdmin", "avatar"],
-                where: { email : user.email}
-            });
+        return DB.Users.findOne({
+            attributes : ["id", "email", "name", "salt", "pwd", "isAdmin", "avatar"],
+            where: { email : user.email}
+        });
     }).then(function(dbUser){
-        if (!dbUser)
+    if (!dbUser)
             return Promise.reject(new ApiError(404, 'The user with '+ user.email +' is not registred'));
+        return [dbUser, Util.validPassword(user.pwd, dbUser.dataValues.salt, dbUser.dataValues.pwd)];
+    }).then(function(datas) {
+        const dbUser = datas[0], isValidPwd = datas[1];
+        if(!isValidPwd)
+            return Promise.reject(new ApiError(401, 'Unknown user'));
 
-        // Check if the input pwd is the correct
-        req.user = dbUser.dataValues;
-        return Util.validPassword(user.pwd, dbUser.dataValues.salt, dbUser.dataValues.pwd);
-    }).then(function(isValidPwd) {
+        req.user = dbUser.toJSON();
+        req.user.salt = req.user.pwd = undefined; // REmove the salt and pwd before return
         // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
-        if(isValidPwd)
-            return Util.generateToken({
-                name:req.user.name,
+        return Util.generateToken({
+                id:req.user.id,
                 email:req.user.email,
+                name:req.user.name,
                 isAdmin : req.user.isAdmin
             },nconf.get('TOKEN_SECRET'));
-        return Promise.reject(new ApiError(401, 'Unknown user'));
     }).then(function(token) {// Call the next middleware
         req.user.token = token;
         next();
@@ -114,9 +103,10 @@ const logIn = function(req,res,next){
         if(!err instanceof ApiError)
             err = new ApiError(err);
         next(err);
+    }).done(function(token) {// Call the next middleware
+        console.log('Wesh weshouille')
     });
 };
-
 
 
 const signUp = function(req,res,next){
@@ -149,6 +139,25 @@ const signUp = function(req,res,next){
 
 
 
+/**
+ * Check the token given
+ *
+ */
+const checkApiToken = function(req,res,next){
+//    console.log(req.headers);
+    if(!_.isEmpty('')) {
+
+    }
+    // Check if token && token is mine
+    // If ok, next(true)
+    // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
+    next();
+}
+
+
+
+
+
 
 /**
  * Exports
@@ -158,7 +167,7 @@ const signUp = function(req,res,next){
 module.exports = {
       isLogged : isAuth,
 
-    checkToken : checkToken,
+    validToken : checkApiToken,
 
          logMe : logIn,
 

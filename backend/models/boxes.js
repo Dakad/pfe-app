@@ -9,7 +9,7 @@ const BoxesModel = function(sequelize, DataTypes) {
   var Boxes = sequelize.define('Boxes', {
     clientId: { // a unique string representing the registred client
       primaryKey: true,
-      type: DataTypes.UUID,
+      type: DataTypes.STRING,
       defaultValue: function() {
         return Util.generateShortUUID();
       },
@@ -21,28 +21,37 @@ const BoxesModel = function(sequelize, DataTypes) {
     },
     clientSecret: { //
       type: DataTypes.STRING,
-      allowNull: false
     },
     clientRedirectUri: {
       type: DataTypes.STRING,
       allowNull: false
     },
+    clientUseRedirectUri: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
     clientType: { //  based on their ability to auth securely with the authorization server CONFIDENTIAL(TLS),PUBLIC
       type: DataTypes.ENUM('CONFIDENTIAL', 'PUBLIC'),
-      allowNull: false,
-    }
+      allowNull: true,
+    },
+
+    clientDescription : DataTypes.TEXT
+
+
   }, {
     comment: "Contains the registered client app using the route '/api' ",
     schema: nconf.get('DATABASE_SCHEMA') || 'public',
 
     classMethods: {
       associate: function(models) {
+
+        Boxes.belongsToMany(models.Users, { as: 'consumers', through: models.Codes, foreignKey: 'consumer' });
+
         Boxes.belongsTo(models.Users, {
-          as: 'owner'
+          as: 'apps',
+          foreignKey: 'owner'
         }); // Boxes will keep the FK to Users
-        Boxes.hasMany(models.Codes, {
-          as: 'client'
-        }); // Codes will keep the FK to Codes
+
       }
     },
 

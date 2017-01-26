@@ -8,6 +8,13 @@ const Util = require('../modules/util');
 
 const UserModel = function(sequelize, DataTypes) {
   const Users = sequelize.define('Users', {
+    id: {
+      type:DataTypes.STRING,
+      primaryKey : true,
+      defaultValue: function() {
+            return Util.generateShortUUID();
+        },
+    },
     email: {
       type:DataTypes.STRING,
       allowNull : false,
@@ -43,12 +50,19 @@ const UserModel = function(sequelize, DataTypes) {
 
     classMethods: {
       associate: function(models) {
-        Users.hasOne(models.Boxes,{
-          onDelete: "CASCADE", // If the box is deleted, don't keep any record of it. JUST DELETE
-           as: 'owner' // The FK in Boxes will be aliased as 'owner'.
+        // To keep all apps registred data through the API
+        Users.hasMany(models.Boxes,{
+            foreignKey: 'owner', // Will create a FK in Boxes named 'owner'
+            onDelete: "CASCADE", // If the box is deleted, don't keep any record of it. JUST DELETE
+            as: 'apps', // The FK in Boxes will be aliased as 'owner'.
         }),
 
-        Users.hasMany(models.Codes, { as: 'user' }); // Codes will keep the FK
+        // To keep all apps allowed by the user to get data
+        Users.belongsToMany(models.Boxes, {
+            foreignKey: 'app', // Will create a FK in Codes named 'app'.
+            through: models.Codes,
+            as: 'authApps', // The FK in Codes will be aliased/accessible as 'authApps'.
+        });
 
       }
     } ,

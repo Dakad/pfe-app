@@ -7,8 +7,22 @@ const Validator = require('validator');
 const _= require('lodash/core');
 const jwt = require('jsonwebtoken');
 const shortId = require("shortid")
-
+const ms = require("ms");
 shortId.characters('0123456789@bcdefghijklmnopqrstuµvwxyz_AßCD€FGH!JKLMNOPQR$TUVWXYZ');
+
+
+
+/**
+ * Vars
+ *
+ */
+
+
+const DEF_COOKIE_AGE = ms((31 * 3) + 'd'); // Valid for 3 months
+
+const DEF_TOKEN_EXP = DEF_COOKIE_AGE;
+
+
 
 
 
@@ -38,19 +52,20 @@ const checkInput = function(input){
 };
 
 
-const checkToken = function(token) {
-
+const checkToken = function(token,secret) {
+    secret = ( (!secret) ? nconf.get('TOKEN_SECRET') : secret);
+    return new Promise(function (fulfill,reject) {
+        jwt.verify(token, secret, function(err, decoded) {
+            return (err) ? reject(err) : fulfill(decoded);
+        });
+    });
 }
 
 
 const generateToken = function (claims,secret) {
     secret = ( (!secret) ? nconf.get('TOKEN_SECRET') : secret);
     return new Promise(function (fulfill) {
-        const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 21); // Valid for 21 days
-
-        claims.exp = parseInt(expiry.getTime() / 1000)
-
+        claims.exp = (!claims.exp) ? DEF_TOKEN_EXP : claims.exp ;
         return fulfill(jwt.sign(claims,secret));
     });
 
@@ -92,18 +107,22 @@ const generateShortUUID = function(){
 
 
 module.exports = {
-    valideInput : checkInput
-    ,
-    generateToken : generateToken
-    ,
-    valideToken : checkToken
-    ,
-    generateSalt : generateSalt
-    ,
-    generateShortUUID : generateShortUUID
-    ,
-    hashPassword : hashPassword
-    ,
+    DEF_COOKIE_AGE : DEF_COOKIE_AGE,
+
+    DEF_TOKEN_EXP : DEF_TOKEN_EXP,
+
+    valideInput : checkInput,
+
+    generateToken : generateToken,
+
+    validToken : checkToken,
+
+    generateSalt : generateSalt,
+
+    generateShortUUID : generateShortUUID,
+
+    hashPassword : hashPassword,
+
     validPassword : validPassword
 }
 

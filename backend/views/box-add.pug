@@ -1,0 +1,47 @@
+extends layout
+
+block content
+  .row.clearfix
+    h1.page-header=title
+
+  form.form-horizontal(method="POST")
+    fieldset
+      legend Fill this form with information about your application.
+      .form-group
+        label.col-lg-2.control-label(for="appName") Name
+        .col-lg-10
+          input#appName.form-control(name='appName',
+                  type="text",
+                  required,
+                  placeholder="Your application name",
+                  minlength="2", maxlength="50"
+                  pattern="[a-zA-Z0-9-_#!&]{2,50}")
+
+          span.help-block Your application name.
+            b.text-warning &nbsp; Only accepted chars : [a-zA-Z0-9-_#!&]{2,50} No spaces allowed in the name
+      .form-group
+        label.col-lg-2.control-label(for="appUri") Callback URL
+        .col-lg-10
+          input#appUri.form-control(name="appUri",
+                type="url",
+                required,
+                placeholder="Callback Redirection URL")
+
+          span.help-block The url to be callback by the oAuth Server for your token
+          .checkbox
+            label
+              input(type="checkbox", checked="true",name="appUseUriAsDefault",value="true")
+              | Use by default
+
+      .form-group
+        label.col-lg-2.control-label(for="appDescrip") Description
+
+        .col-lg-10
+          textarea#appDescrip.form-control(rows="3", name="appDescrip",maxlength='145')
+
+          span.help-block What's your application about ? Give a little description, please ! (max: 140 chars)
+
+      .form-group
+        .col-lg-10.col-lg-offset-2
+          button.btn.btn-success.btn(type="submit") Submit
+

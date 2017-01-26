@@ -38,19 +38,83 @@ const _ = require("lodash/core");
 const renderCtrl = require('./render');
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
+const ApiError = require('../modules/api-error');
 const DB = require('../models');
 
 
-const COOKIE_OPTIONS = {
-    maxAge      : new Date(Date.now() + 900000),
-    httpOnly    : true,
-    signed      : true,
-    //expires: new Date(Date.now() + (24 *  1000 * 60 * 60 * 24)),
-    expires     : new Date(Date.now() + 900000),
+const DEFAULT_COOKIE_OPTIONS = {
+    httpOnly: true,
+    signed: true,
 }
 
 
+const validSchema = {
+    customValidators: {
+        isAppNameValid: function(value) {
+            // TODO check the app name regex [a-zA-Z0-9-_#!&]{2,50}
+            return true;
+        }
+    },
+    'appName': {
+        errorMessage: 'Invalid Application name',
+        notEmpty: true,
+        isLength: {
+            options: [{ min: 2, max: 50   }],
+            errorMessage: 'The name must be between 2 and 50 chars long' // Error message for the validator, takes precedent over parameter message
+        },
+    },
+    'appUri': {
+        errorMessage: 'This URI is invalid',
+        notEmpty: true,
+        matches: {
+            options: ['example', 'i'] // pass options to the validator with the options property as an array
+                // options: [/example/i] // matches also accepts the full expression in the first parameter
+        },
+    },
+    'appDescrip': {
+        optional: true, // won't validate if field is empty
+        isLength: {
+            options: [{ max: 150  }],
+            errorMessage: 'This description is too long. Cut some, please !'
+        },
+    },
 
+    'email': {
+        errorMessage: 'This email is invalid',
+        notEmpty: {
+            errorMessage : 'Missing the email to be logged in'
+        },
+        isEmail : {
+          errorMessage : 'Put a valid email to continue'
+        }
+    },
+
+    'pwd': {
+        errorMessage: 'This password is invalid',
+        notEmpty: {
+            errorMessage : 'Missing the pwd to be logged in'
+        }
+        // isLength: {
+        //     options: [{ min: 2, max: 50   }],
+        //     errorMessage: 'The name must be between 2 and 50 chars long' // Error message for the validator, takes precedent over parameter message
+        // },
+    },
+    'pwd2': {
+        errorMessage: 'This password confirmation is invalid',
+        notEmpty: {
+            errorMessage : 'Missing the confirmation password to be registred'
+        }
+    },
+
+    'agree': {
+        optional : true,
+        errorMessage : 'Missing the agreement confirmation checked to be registred'
+    }
+
+
+
+
+};
 
 
 
@@ -59,19 +123,34 @@ const COOKIE_OPTIONS = {
  */
 
 
-const getBox = function(req,res,next) {
-    let result = DB.User.findOne({
-            where: { email : req.user.email}
-        }).then(function(user){
-            console.log(user);
-            console.log(user.getBoxes());
-        });
-    if(req.param.app){
-        req.checkParams('app', 'Invalid name for this box').notEmpty().isAlphanumeric();
-        req.sanitizeParams();
-    }else{
+const getBox = function(req, res, next) {
+    let getUsersApps = DB.Users.findOne({
+        where: {
+            email: req.user.email
+        },
+        exclude: ['pwd', 'salt', 'avatar'],
+        include: [{
+            model: DB.Boxes,
+            as: 'apps',
+            exclude: ['updatedAt', 'owner', 'clientType']
+        }]
+    }).then(function(user) {
+        if (!user)
+            return next(new ApiError.NotFound('Unknown user'))
+        return user.getApps();
+    }).then(function(apps) {
+        console.log(apps);
+        if (req.param.app) {
+            req.checkParams('app', 'Invalid name for this box').notEmpty().isAlphanumeric();
+            req.sanitizeParams();
 
-    }
+            // Get only the request app in param in
+        }
+        res.apps = apps;
+        next();
+    });
+
+
 }
 
 
@@ -80,34 +159,38 @@ const getBox = function(req,res,next) {
  * Route for POST
  */
 
-const checkLoginPosted = function(req,res,next){
+const checkLoginPosted = function(req, res, next) {
+    // req.checkBody(validSchema);
     req.checkBody('email', 'Missing the email to be logged in').notEmpty();
     req.checkBody('email', 'Put a valid email to be logged in').isEmail();
     req.checkBody('pwd', 'Missing the password to be logged in').notEmpty();
 
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
-        if(result.isEmpty())
-            next() ;
+        if (result.isEmpty())
+            next();
     });
- }
+}
 
-const afterLoginChecked = function (req,res) {
-    // Check if re.body.remember is check
-    // then create a cookie and store
-    if(req.body.rememberMe)
-        // Save the token in req.locals.accesToken intro cookie['acccess_token']
-        res.cookie('acccess_token',req.user.token,COOKIE_OPTIONS);
+const afterLoginChecked = function(req, res) {
+    // By default, the cookie expires when the browser is closed.
+    let cookieOpts = DEFAULT_COOKIE_OPTIONS;
+    let exp = new Date();
 
-    console.log(req.user);
+    // if user want to be auto-logged ?
+    if (req.body.rememberMe) {
+        cookieOpts.maxAge = Util.DEF_COOKIE_AGE;
+        exp.setTime(exp.getTime() + Util.DEF_COOKIE_AGE);
+        cookieOpts.expires = exp.toGMTString();
+    }
 
-
-    res.cookie('isAuth', true, COOKIE_OPTIONS);
+    res.cookie('accessToken', req.user.token, cookieOpts);
+    res.cookie('isAuth', true, cookieOpts);
     // req.flash('success','Welcome back !.');
     res.redirect('manage');
 }
 
-const checkSignPosted = function(req,res,next){
+const checkSignPosted = function(req, res, next) {
     req.checkBody('email', 'Missing the email to be registred').notEmpty();
     req.checkBody('email', 'Put a valid email to be registred').isEmail();
     req.checkBody('pwd', 'Missing the password to be registred').notEmpty();
@@ -119,21 +202,50 @@ const checkSignPosted = function(req,res,next){
 
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
-        return (!result.isEmpty()) ? renderCtrl.signupPage(req,res) :  next() ;
+        return (!result.isEmpty()) ? renderCtrl.signupPage(req, res) : next();
     });
 
 }
 
-const afterSignChecked = function (req,res,next) {
+const afterSignChecked = function(req, res, next) {
 
-    req.flash('success','Welcome onboard !\n You can go log in now.');
+    req.flash('success', 'Welcome onboard !\n You can go log in now.');
 
     res.render('login');
 };
 
 
-const addBox = function (req,res,next) {
-    console.log(req.param);
+const addBox = function(req, res, next) {
+    req.checkBody('appName', 'Missing the application name to be registred').notEmpty();
+    req.checkBody('appName', 'The name must be between 2 and 50 chars long').len(2,50);
+    req.checkBody('appUri', 'Missing the callback URI to be registred').notEmpty();
+
+    if(req.body.appDescrip)
+        req.checkBody('appDescrip', 'Cut some description').notEmpty().len(1,150);
+
+    req.getValidationResult().then(function(result) {
+        req.sanitizeBody();
+        res.locals.errors = result.mapped();
+        if (!result.isEmpty())
+            next();
+    }).then(function (){
+
+        const nApp = DB.Boxes.create({
+            clientName : req.body.appName,
+            clientRedirectUri : req.body.appUri,
+            clientUseRedirectUri : req.body.appUseUriAsDefault || false,
+            clientDescription : req.body.appDescrip || null,
+            owner : req.user.id
+        },{
+            include: [{model : DB.Users,  as: 'apps'}]
+        });
+        return nApp;
+    }).then(function(app){
+        res.redirect(201,'app/'+app.clientId)
+    }).catch(function(err){
+        
+        console.log(err);
+    });
 }
 
 
@@ -141,7 +253,7 @@ const addBox = function (req,res,next) {
  * Route for DELETE
  */
 
-const logout = function (req,res) {
+const logout = function(req, res) {
     req.clearCookies();
     req.session = null; // Destroy session
     res.locals.isAuth = false;
@@ -149,11 +261,9 @@ const logout = function (req,res) {
 }
 
 
-const removeBox = function (req,res,next) {
+const removeBox = function(req, res, next) {
 
 }
-
-
 
 
 
@@ -164,13 +274,13 @@ const removeBox = function (req,res,next) {
  * Error Handler
  */
 const errorHandler = function(err, req, res, next) {
-    if(!err)
+    if (!err)
         err = new Error('Not Found - Something went south');
-    if(!err.status)
+    if (!err.status)
         err.status = 404;
     logger.error(err);
 
-    renderCtrl.renderErrorPage(err, res);
+    renderCtrl.errorPage(err, res);
 };
 
 
@@ -184,20 +294,20 @@ const errorHandler = function(err, req, res, next) {
 // Methods
 module.exports = {
 
-    loginPosted : checkLoginPosted,
-    afterLogin : afterLoginChecked,
+    loginPosted: checkLoginPosted,
+    afterLogin: afterLoginChecked,
 
     logMeOut: logout,
 
-    signPosted : checkSignPosted,
-    afterSignin : afterSignChecked,
+    signPosted: checkSignPosted,
+    afterSignin: afterSignChecked,
 
 
-    listBox  : getBox,
+    listBox: getBox,
 
-    addBox  : addBox,
+    addBox: addBox,
 
-    removeBox : removeBox,
+    removeBox: removeBox,
 
     errorHandler: errorHandler
 };

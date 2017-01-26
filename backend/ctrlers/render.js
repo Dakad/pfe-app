@@ -18,7 +18,8 @@
  *		+ renderAboutPage()
  *		+ renderDocPage()
  *		+ renderExePage()
- *		+ renderDashboardPage()
+ *		+ renderBoxAddPage()
+ *		+ renderBoxListPage()
  *		+ renderErrorPage()
  *		+ errorHandler()
  *
@@ -83,13 +84,19 @@ const renderAboutPage = function(req, res) {
     });
 };
 
-const renderDashboardPage = function(req, res) {
-    return res.render('dashboard', {
-        'title': 'Your API Wallet',
-        'apiId': 'test',
-        'apiKey': '915cd41e9-b16d4378fa-448ed92f-104f-585ffb8ffc13ae1770000084'
+const renderBoxListPage = function(req, res) {
+    return res.render('box-list', {
+        title : 'List of registred apps',
+        'boxes' : res.apps
     });
 }
+
+const renderBoxAddPage = function(req, res) {
+    return res.render('box-add', {
+        title : 'Register a new app'
+    });
+}
+
 
 const renderErrorPage = function(err, res, next) {
     // set locals, only providing error in development
@@ -120,7 +127,9 @@ module.exports = {
 
     docPage : renderDocPage,
 
-    boxDashboardPage: renderDashboardPage,
+    boxListPage: renderBoxListPage,
+
+    boxAddPage: renderBoxAddPage,
 
     trainingPage: renderExePage,
 

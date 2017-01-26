@@ -54,7 +54,7 @@ router.init = function (){
     router.use(cookieSession({
         keys : [ nconf.get('COOKIE_SECRET')],
         secret : nconf.get('COOKIE_SECRET'),
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
+        maxAge: 24 * 60 * 60, // 1 Week
         httpOnly : true,
     }));
 
@@ -102,12 +102,16 @@ router.get(['/exe', '/training'], renderCtrl.trainingPage);
 /* GET documentation page. */
 router.get(['/doc', '/documentation'], renderCtrl.docPage);
 
-/* GET Dashboard page. */
-router.param('boxName', publicCtrl.listBox)
-router.route(['/app/(:boxName)', '/manage/(:boxName)'])
-        .get([authCtrl.isLogged, publicCtrl.listBox, renderCtrl.boxDashboardPage])
-        .post(authCtrl.isLogged, publicCtrl.addBox)
-        .delete(authCtrl.isLogged, publicCtrl.removeBox)
+/* GET registred Apps page. */
+router.param('appName', publicCtrl.listBox)
+router.get(['/apps(/:appName)?', '/manage(/:appName)?'],
+        authCtrl.isLogged, publicCtrl.listBox, renderCtrl.boxListPage)
+
+router.route('/app')
+        .all(authCtrl.isLogged)
+        .get(renderCtrl.boxAddPage)
+        .post(publicCtrl.listBox, publicCtrl.addBox)
+        .delete(publicCtrl.removeBox)
 
 
 // catch 404 and forward to error handler
