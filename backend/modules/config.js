@@ -51,7 +51,7 @@ const dbUrlParseur = function(cb) {
             port: DB_URL.port, //env var: DATABASE_PORT
             database: DB_URL.pathname.split('/')[1],
             pool : {
-              max: 17, //set pool max size to 17
+              max: 5, //set pool max size to 17
               min: 2, //set min pool size to 5
               idle: 10000 //close idle clients after 10 seconds
             }

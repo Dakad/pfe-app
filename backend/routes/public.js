@@ -3,7 +3,7 @@
 /**
  * =============================
  *
- * Route for /public/*
+ * Route for /*
  *
  * =============================
  *
@@ -37,6 +37,7 @@ const cookieSession = require('cookie-session')
 
 
 // Custom -mine
+const renderCtrl = require('../ctrlers/render');
 const publicCtrl = require('../ctrlers/public');
 const authCtrl = require('../ctrlers/auth');
 
@@ -47,7 +48,6 @@ const authCtrl = require('../ctrlers/auth');
 
 router.init = function (){
     router.use(flash());
-
 
     router.use(cookieParser(nconf.get('COOKIE_SECRET')));
 
@@ -73,20 +73,20 @@ router.use((req, res, next) => {
 
 
 /* GET home page. */
-router.get(['/', '/home'], publicCtrl.homePage);
+router.get(['/', '/home'], renderCtrl.homePage);
 
 
 /* GET-POST login page. */
 router.route('/login')
-    .get(publicCtrl.loginPage)
+    .get(renderCtrl.loginPage)
     .post([publicCtrl.loginPosted,authCtrl.logMe, publicCtrl.afterLogin]);
 
 
 
 /* GET-POST signup page. */
 router.route('/signup')
-    .get(publicCtrl.signupPage)
-    .post([publicCtrl.signPosted,authCtrl.registerMe,publicCtrl.signupPage]);
+    .get(renderCtrl.signupPage)
+    .post([publicCtrl.signPosted,authCtrl.registerMe,renderCtrl.signupPage]);
 
 /* GET about page. */
 router.get('/logout', publicCtrl.logMeOut);
@@ -94,17 +94,20 @@ router.get('/logout', publicCtrl.logMeOut);
 
 
 /* GET about page. */
-router.get('/about', publicCtrl.aboutPage);
+router.get('/about', renderCtrl.aboutPage);
 
 /* GET documentation page. */
-router.get(['/exe', '/training'], publicCtrl.trainingPage);
+router.get(['/exe', '/training'], renderCtrl.trainingPage);
 
 /* GET documentation page. */
-router.get(['/doc', '/documentation'], publicCtrl.docPage);
+router.get(['/doc', '/documentation'], renderCtrl.docPage);
 
 /* GET Dashboard page. */
-router.get(['/keys', '/manage'], [authCtrl.isLogged, publicCtrl.dashboardPage]);
-
+router.param('boxName', publicCtrl.listBox)
+router.route(['/app/(:boxName)', '/manage/(:boxName)'])
+        .get([authCtrl.isLogged, publicCtrl.listBox, renderCtrl.boxDashboardPage])
+        .post(authCtrl.isLogged, publicCtrl.addBox)
+        .delete(authCtrl.isLogged, publicCtrl.removeBox)
 
 
 // catch 404 and forward to error handler
@@ -112,7 +115,7 @@ router.use(publicCtrl.errorHandler);
 
 
 // Last middleware -- Error handler - What to do when a error occurs
-router.use(publicCtrl.errorPage);
+router.use(renderCtrl.errorPage);
 
 
 

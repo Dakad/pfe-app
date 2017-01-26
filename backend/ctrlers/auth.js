@@ -3,7 +3,7 @@
 /**
  * =============================
  *
- * Ctrler for the reoute demandin some auth
+ * Ctrler for the route demanding some authentication
  * All methods receive (req:Request,res:Response,next:Middleware)
  *
  *
@@ -12,8 +12,10 @@
  * Attributes : /
  *
  * Methods : /
- *		+ renderHomePage()
- *		+ renderLoginPage()
+ *		+ isAuth()
+ *		+ checkToken()
+ *		+ logIn()
+ *		+ signUp()
 
  *
  * Events : /
@@ -48,12 +50,15 @@ const DB = require('../models');
  *
  */
 const isAuth = function(req,res,next){
+    console.log(req.cookies);
     // Check if req.headers || req.body contains a api-key
     // If not, check if req.headers || req.body contains a token
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
 
+    next();
 }
-isAuth.unless = unless;
+
+// isAuth.unless = unless;
 
 
 
@@ -151,14 +156,11 @@ const signUp = function(req,res,next){
 
 // Methods
 module.exports = {
-      isLogged : checkToken,
+      isLogged : isAuth,
 
     checkToken : checkToken,
-
-     checkAuth : isAuth,
 
          logMe : logIn,
 
     registerMe : signUp
-
 };

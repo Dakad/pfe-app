@@ -33,11 +33,23 @@ const authCtrl = require('../ctrlers/auth');
 
 
 
+router.init = function (){
+
+
+}
+
+
 
 /* Default response to /api on every method {GET,POST, PUT, DELETE} */
 router.use('/', function(req, res, next) {
   res.json('Where are you going ? Nothing there :-( .');
 });
+
+
+router.all('/zen',apiCtrl.zen);
+
+
+//router.all('*', oauthCtrl)
 
 
 

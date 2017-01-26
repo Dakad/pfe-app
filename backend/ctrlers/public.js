@@ -35,10 +35,10 @@ const _ = require("lodash/core");
 
 
 // Custom - Mine
+const renderCtrl = require('./render');
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
 const DB = require('../models');
-const jsonDocFormat = require("../public/cheatsheet-help");
 
 
 const COOKIE_OPTIONS = {
@@ -51,78 +51,28 @@ const COOKIE_OPTIONS = {
 
 
 
-const renderHomePage = function(req, res) {
-    res.render('home', { title: 'PFE App' });
-};
 
-const renderLoginPage = function(req, res) {
-    res.render('login', { title: 'Sign in to continue' });
-};
 
-const renderSignupPage = function(req, res) {
-    res.render('signup', { title: 'Register a new user' });
-};
 
-const renderDocPage = function(req, res) {
-    res.render('doc', {
-        title: 'API Documentation',
-        format: jsonDocFormat,
-        urlApi: req.protocol + '://' + req.get('host') + '/api/v1'
-    });
-};
+/**
+ * Route for GET
+ */
 
-const renderExePage = function(req, res) {
-    res.render('exe', { title: 'Little training before the project' });
-};
 
-const logout = function (req,res) {
-    req.clearCookies();
-    req.session = null; // Destroy session
-    res.locals.isAuth = false;
-    res.redirect('home');
+const getBox = function(req,res,next) {
+    let result = DB.User.findOne({
+            where: { email : req.user.email}
+        }).then(function(user){
+            console.log(user);
+            console.log(user.getBoxes());
+        });
+    if(req.param.app){
+        req.checkParams('app', 'Invalid name for this box').notEmpty().isAlphanumeric();
+        req.sanitizeParams();
+    }else{
+
+    }
 }
-
-
-
-const renderAboutPage = function(req, res) {
-    res.render('about', {
-        title: 'About the dev team of this marvellous app',
-        team: [{
-            name: 'Dakad',
-            avatar: 'https://avatars3.githubusercontent.com/u/3106338?v=3&s=400',
-            git: 'https://github.com/Dakad?tab=repositories&type=source',
-            fb: 'https://github.com/Dakad?tab=repositories&type=source',
-            twit: 'https://github.com/Dakad?tab=repositories&type=source',
-            lkdin: 'https://github.com/Dakad?tab=repositories&type=source',
-        }, {
-            name: 'Tegawende',
-            avatar: 'https://avatars3.githubusercontent.com/u/20798720?v=3&s=400',
-            git: 'https://github.com/Tegawende'
-        }, ]
-
-    });
-};
-
-const renderDashboardPage = function(req, res) {
-    // Go fetch the real boxes for this user
-    return res.render('dashboard', {
-        'title': 'Your API Wallet',
-        'apiId': 'test',
-        'apiKey': '915cd41e9-b16d4378fa-448ed92f-104f-585ffb8ffc13ae1770000084'
-    });
-}
-
-const renderErrorPage = function(err, res, next) {
-    // set locals, only providing error in development
-    res.locals.err = err;
-    res.locals.msg = err.message;
-    res.locals.status = err.status;
-    res.locals.title = err.title || 'Error'
-    logger.error(err);
-    res.status(err.status || 500).render('error');
-};
-
-
 
 
 
@@ -130,7 +80,7 @@ const renderErrorPage = function(err, res, next) {
  * Route for POST
  */
 
- const checkLoginPosted = function(req,res,next){
+const checkLoginPosted = function(req,res,next){
     req.checkBody('email', 'Missing the email to be logged in').notEmpty();
     req.checkBody('email', 'Put a valid email to be logged in').isEmail();
     req.checkBody('pwd', 'Missing the password to be logged in').notEmpty();
@@ -157,10 +107,6 @@ const afterLoginChecked = function (req,res) {
     res.redirect('manage');
 }
 
-
-
-
-
 const checkSignPosted = function(req,res,next){
     req.checkBody('email', 'Missing the email to be registred').notEmpty();
     req.checkBody('email', 'Put a valid email to be registred').isEmail();
@@ -173,18 +119,43 @@ const checkSignPosted = function(req,res,next){
 
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
-        return (!result.isEmpty()) ? renderSignupPage(req,res) :  next() ;
+        return (!result.isEmpty()) ? renderCtrl.signupPage(req,res) :  next() ;
     });
 
 }
-
 
 const afterSignChecked = function (req,res,next) {
 
     req.flash('success','Welcome onboard !\n You can go log in now.');
 
     res.render('login');
+};
+
+
+const addBox = function (req,res,next) {
+    console.log(req.param);
 }
+
+
+/**
+ * Route for DELETE
+ */
+
+const logout = function (req,res) {
+    req.clearCookies();
+    req.session = null; // Destroy session
+    res.locals.isAuth = false;
+    res.redirect('home');
+}
+
+
+const removeBox = function (req,res,next) {
+
+}
+
+
+
+
 
 
 
@@ -197,9 +168,10 @@ const errorHandler = function(err, req, res, next) {
         err = new Error('Not Found - Something went south');
     if(!err.status)
         err.status = 404;
+    logger.error(err);
 
-    renderErrorPage(err, res);
-}
+    renderCtrl.renderErrorPage(err, res);
+};
 
 
 
@@ -211,26 +183,21 @@ const errorHandler = function(err, req, res, next) {
 
 // Methods
 module.exports = {
-    homePage: renderHomePage,
 
-    loginPage: renderLoginPage,
     loginPosted : checkLoginPosted,
     afterLogin : afterLoginChecked,
 
     logMeOut: logout,
 
-    signupPage: renderSignupPage,
     signPosted : checkSignPosted,
     afterSignin : afterSignChecked,
 
-    dashboardPage: renderDashboardPage,
 
-    docPage: renderDocPage,
+    listBox  : getBox,
 
-    trainingPage: renderExePage,
+    addBox  : addBox,
 
-    aboutPage: renderAboutPage,
+    removeBox : removeBox,
 
-    errorPage: renderErrorPage,
     errorHandler: errorHandler
 };

@@ -34,16 +34,19 @@ const Morgan = require('morgan');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const expressValidator = require('express-validator');
-const cookieParser  = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 
 
 // Custom - Mine
-const DB = require("../models/index")
+const DB = require("../models/index");
 const logger = require("./logger");
 
+
 // Routes
-const defRoute = require('../routes/public');
 const apiRoute = require('../routes/api');
+const oauthRoute = require('../routes/oauth');
+const defRoute = require('../routes/public');
+
 
 
 /**
@@ -72,13 +75,9 @@ function getBindedServerPort() {
  *		- Set view engine json bodies
  *		- parse json bodies
  *
- * Configure server route and error middlewares:
- *		- Set all possibles routes
- *		- Set the error middlewares
  */
 function configServer() {
-    return DB.initConnection()
-        .then(function() {
+    return new Promise(function(fulfill) {
             let folder = path.join(__dirname, '..', 'public');
             logger.info('[Server] Init the app(Express) with static folder :', folder);
             _app.use(express.static(folder));
@@ -91,7 +90,6 @@ function configServer() {
             folder = path.join(__dirname, '..', 'views');
             logger.info('[Server] Init the app(Express) with views folder :', folder);
             _app.set('views', folder);
-
 
 
             logger.info('[Server] Init the app(Express) with Views Engine :', ' Pug(Jade)');
@@ -107,36 +105,66 @@ function configServer() {
 
             logger.info('[Server] Init the app(Express) with BOdyParser to :', 'JSON');
             _app.use(bodyParser.json()); // The body is parsed into JSON
-            _app.use(bodyParser.urlencoded({ extended: false })); // The JSON parsed body will only
-                // contain key-value pairs, where the value can be a string or array
+            _app.use(bodyParser.urlencoded({
+                extended: false
+            })); // The JSON parsed body will only
+            // contain key-value pairs, where the value can be a string or array
 
 
-
+            logger.info('[Server] Init the app(Express) with validator middleware :', 'expressValidator');
             _app.use(expressValidator());
+
 
             logger.info('[Server] Init the app(Express) protection from some well-known web vulnerabilities :', 'helmet');
             //_app.use(helmet());
             // _app.use(helmet.noCache());
 
-            logger.info('[Server - Route] Init the app(Express) with route for : ', '/api/*');
-            _app.use('/api', apiRoute);
-
-
-            logger.info('[Server - Route] Init the app(Express) with route for : ', '/public/*');
-            defRoute.init();
-            logger.info('[Server] Init route /public with CookieParser ');
-            _app.use('/public',cookieParser(nconf.get('COOKIE_SECRET')));
-            
-            _app.use('/public', defRoute);
-
-
-
-
 
             logger.info('[Server] Init done !');
-
+            fulfill();
         });
 };
+
+
+
+
+
+/**
+ *
+ * Configure server route and error middlewares:
+ *		- Set all possibles routes
+ *		- Set the config middlewares to the route
+ *		- Init the route
+ */
+function configRoutes() {
+    return new Promise(function(fulfill) {
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/*', '/public/*');
+        logger.info('[Server - Routes] Init route / with CookieParser ');
+        _app.use('/', cookieParser(nconf.get('COOKIE_SECRET')));
+        _app.use('/', defRoute);
+        _app.use('/public', defRoute);
+        defRoute.init();
+
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/oauth/*');
+        _app.use('/oauth', oauthRoute);
+        oauthRoute.init();
+
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/api/*');
+        _app.use('/api', apiRoute);
+        apiRoute.init();
+
+
+        logger.info('[Server - Routes] Init done !');
+        fulfill();
+    });
+
+}
+
+
+
+
+
+
 
 
 
@@ -151,8 +179,9 @@ function configServer() {
  *
  */
 Server.start = function(cb) {
-    return configServer()
-        .then(function() {
+
+    return Promise.all([DB.initConnection(), configServer(), configRoutes()])
+        .then(function () {
             // Hold the instance of server
             Server._server = _app.listen(nconf.get('PORT'));
 
@@ -178,17 +207,14 @@ Server.start = function(cb) {
                         Server.onError(error);
                 }
             });
-
-        }).nodeify(cb);
-}
+        }).nodeify(cb); // Change this sh*t function into good Promise
+};
 
 
 /**
  * Stop the server:
  *		- Close the pool and the connection to PG
- *    - Stop the server
- *
- *
+ *      - Stop the server
  */
 Server.stop = function() {
     const _server = Server._server;
@@ -197,7 +223,8 @@ Server.stop = function() {
         _server.close();
         logger.warn('[Server] Web server no more listening on Port', getBindedServerPort());
         process.exit();
-    } else {
+    }
+    else {
         logger.error('[Server] Cannot stop web server not yet still listening on :' + getBindedServerPort());
     }
 };
@@ -209,6 +236,8 @@ Server.stop = function() {
 Server.onError = function(err) {
     logger.error('[Server] ' + err);
 };
+
+
 
 
 /**

@@ -30,15 +30,26 @@
 
 
  // Custom -Mine
+const Util = require('../modules/util');
+const ApiError = require('../modules/api-error');
+const DB = require('../models');
 
 
 
 
 
 
-const sendJsonResponse = function (res,statut, data){
+const sendJsonResponse = function (res,statut,data){
     res.status(statut).json(data);
 };
+
+
+
+
+const zen = function(req,res,next){
+    return sendJsonResponse(res,200, 'Hello, I\' will soon give u some deep shit quotes ! Just wait for it !');
+}
+
 
 
 
@@ -50,7 +61,5 @@ const sendJsonResponse = function (res,statut, data){
 
 // Methods
 module.exports = {
-    
-
-
+    zen : zen
 };

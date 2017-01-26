@@ -8,10 +8,6 @@ const Util = require('../modules/util');
 
 const UserModel = function(sequelize, DataTypes) {
   const Users = sequelize.define('Users', {
-    clientId: {
-      type:DataTypes.STRING,
-      unique : true
-    },
     email: {
       type:DataTypes.STRING,
       allowNull : false,
@@ -48,8 +44,12 @@ const UserModel = function(sequelize, DataTypes) {
     classMethods: {
       associate: function(models) {
         Users.hasOne(models.Boxes,{
-          onDelete: "CASCADE"
-        })
+          onDelete: "CASCADE", // If the box is deleted, don't keep any record of it. JUST DELETE
+           as: 'owner' // The FK in Boxes will be aliased as 'owner'.
+        }),
+
+        Users.hasMany(models.Codes, { as: 'user' }); // Codes will keep the FK
+
       }
     } ,
 
