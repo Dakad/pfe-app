@@ -1,4 +1,4 @@
-extends layout
+extends ../layout
 
 block content
   .row.clearfix
@@ -19,6 +19,16 @@ block content
 
           span.help-block Your application name.
             b.text-warning &nbsp; Only accepted chars : [a-zA-Z0-9-_#!&]{2,50} No spaces allowed in the name
+      .form-group
+        label.col-lg-2.control-label(for='appType') Select
+        .col-lg-10
+          select#select.form-control(required,name="appType")
+            option(value="web-app") Web-server app
+            option(value="browser") Browser-based app
+            option(value="native") Native
+            option(value="mobile") Mobile
+          span.help-block What type of application are you designing ?
+
       .form-group
         label.col-lg-2.control-label(for="appUri") Callback URL
         .col-lg-10
@@ -43,5 +53,5 @@ block content
 
       .form-group
         .col-lg-10.col-lg-offset-2
-          button.btn.btn-success.btn(type="submit") Submit
+          button.btn.btn-success.btn(type="submit") Register
 

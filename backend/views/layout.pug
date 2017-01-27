@@ -1,15 +1,15 @@
 doctype html
 html(lang='en')
-  include ./partials/_head
+  include ./_partials/_head
   body
-  
-    include ./partials/_navbar-header
+
+    include ./_partials/_navbar-header
 
     .container
       if(messages)
         .row.clearfix
-          != messages('./partials/_flash-msg', locals)
+          != messages('./_partials/_flash-msg', locals)
       block content
 
 
-    include ./partials/_footer
+    include ./_partials/_footer

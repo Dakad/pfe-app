@@ -18,8 +18,8 @@
  *		+ renderAboutPage()
  *		+ renderDocPage()
  *		+ renderExePage()
- *		+ renderBoxAddPage()
- *		+ renderBoxListPage()
+ *		+ renderAppAddPage()
+ *		+ renderAppListPage()
  *		+ renderErrorPage()
  *		+ errorHandler()
  *
@@ -46,11 +46,11 @@ const renderHomePage = function(req, res) {
 };
 
 const renderLoginPage = function(req, res) {
-    res.render('login', { title: 'Sign in to continue' });
+    res.render('user/login', { title: 'Sign in to continue' });
 };
 
 const renderSignupPage = function(req, res) {
-    res.render('signup', { title: 'Register a new user' });
+    res.render('user/signup', { title: 'Register a new user' });
 };
 
 const renderDocPage = function(req, res) {
@@ -84,18 +84,27 @@ const renderAboutPage = function(req, res) {
     });
 };
 
-const renderBoxListPage = function(req, res) {
-    return res.render('box-list', {
-        title : 'List of registred apps',
-        'boxes' : res.apps
+const renderAppListPage = function(req, res) {
+     return res.render('app/list', {
+        title : 'List of your registred apps',
+        apps : res.apps || [res.client]
     });
-}
+};
 
-const renderBoxAddPage = function(req, res) {
-    return res.render('box-add', {
+const renderAppAddPage = function(req, res) {
+    return res.render('app/add', {
         title : 'Register a new app'
     });
 }
+
+
+const renderDialogPage = function (req,res,next){
+    return res.render('dialog',{
+       client : req.client,
+       user   : req.user
+    });
+}
+
 
 
 const renderErrorPage = function(err, res, next) {
@@ -119,6 +128,7 @@ const renderErrorPage = function(err, res, next) {
 
 // Methods
 module.exports = {
+
     homePage: renderHomePage,
 
     loginPage: renderLoginPage,
@@ -127,13 +137,16 @@ module.exports = {
 
     docPage : renderDocPage,
 
-    boxListPage: renderBoxListPage,
+    appListPage: renderAppListPage,
 
-    boxAddPage: renderBoxAddPage,
+    appAddPage: renderAppAddPage,
 
     trainingPage: renderExePage,
 
     aboutPage: renderAboutPage,
+
+    dialogPage: renderDialogPage,
+
 
     errorPage: renderErrorPage,
 };

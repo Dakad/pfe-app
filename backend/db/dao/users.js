@@ -11,7 +11,7 @@
  * Attributes : /
  *
  * Methods : /
- *		- sendJsonResponse(req:Req)
+ *		- create (nUser)
  *
  *
  * Events : /
@@ -24,11 +24,11 @@
 /**
  * Load modules dependencies.
  */
- // Built-in
+// Built-in
 
 
 
- // Custom - Mine
+// Custom - Mine
 const Util = require('../../modules/util');
 const ApiError = require('../../modules/api-error');
 const DB = require('../dal');
@@ -40,15 +40,17 @@ const DB = require('../dal');
 
 const UserDAO = {
 
-    create      : function (nUser) {
-        return DB.Users.create(nUser).catch(errorHandler);
+    create: function(nUser) {
+        return DB.Users.create(nUser,{
+            fields : ['pwd','email','salt']
+        }).catch(errorHandler);
     },
 
 
-    findByEmail : function (email){
+    findByEmail: function(email) {
         return DB.Users.findOne({
-            attributes : ["id", "email", "name", "salt", "pwd", "isAdmin", "avatar"],
-            where: { email : email}
+            attributes: ["id", "email", "name", "salt", "pwd", "isAdmin", "avatar"],
+            where: {    email: email}
         }).catch(errorHandler);
     },
 
@@ -72,7 +74,7 @@ const UserDAO = {
 
 
 
-function errorHandler (err){
+function errorHandler(err) {
 
     console.log(err);
     debugger;

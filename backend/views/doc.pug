@@ -1,4 +1,4 @@
-extends layout
+extends ./layout
 
 block content
   .row.clearfix
@@ -24,7 +24,7 @@ block content
     .col-lg-9.col-md-9.col-sm-8
       p This documentation describes how to use our API to interract with our system.
 
-      include ./doc_basic
+      include ./doc/basic
 
       .panel.panel-danger
         .panel-heading
@@ -40,7 +40,7 @@ block content
             else
               a(href="/public/signup") Click here to get your token
 
-      include ./doc_format
+      include ./doc/format
 
       .panel.panel-warning#limit
         .panel-heading

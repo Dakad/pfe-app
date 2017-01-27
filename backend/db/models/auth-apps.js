@@ -5,8 +5,8 @@ const nconf = require("nconf");
 const Util = require('../../modules/util');
 
 
-const CodesModel = function(sequelize, DataTypes) {
-  var Codes = sequelize.define('Codes', {
+const AuthAppsModel = function(sequelize, DataTypes) {
+  const AuthApps = sequelize.define('AuthApps', {
     // client: { // App required
     //   type:DataTypes.UUID,
     //   primaryKey: true,
@@ -22,17 +22,17 @@ const CodesModel = function(sequelize, DataTypes) {
     classMethods: {
       associate: function(models) {
 
-        // Codes.Consumers = Codes.belongsToMany(models.Users,{
+        // AuthApps.Consumers = AuthApps.belongsToMany(models.Users,{
         //     foreignKey: 'consumer', // Will create a FK in Coxes named 'app'.
-        //     through: models.Codes,
-        //     as: 'consumers', // The FK in Codes will be aliased/accessible as 'authApps'.
+        //     through: models.AuthApps,
+        //     as: 'consumers', // The FK in AuthApps will be aliased/accessible as 'authApps'.
         // });
 
         // // To keep all apps allowed by the user to get data
-        // Codes.AuthApps = Codes.belongsToMany(models.Boxes, {
+        // AuthApps.AuthApps = AuthApps.belongsToMany(models.Boxes, {
         //     foreignKey: 'app', // Will create a FK in Coxes named 'app'.
-        //     through: models.Codes,
-        //     as: 'authApps', // The FK in Codes will be aliased/accessible as 'authApps'.
+        //     through: models.AuthApps,
+        //     as: 'authApps', // The FK in AuthApps will be aliased/accessible as 'authApps'.
         // });
 
       }
@@ -47,9 +47,9 @@ const CodesModel = function(sequelize, DataTypes) {
     }
 
   });
-  return Codes;
+  return AuthApps;
 };
 
 
 
-module.exports = CodesModel;
+module.exports = AuthAppsModel;

@@ -3,7 +3,7 @@
 /**
  * =============================
  *
- * DAO to handle CRUD  on Boxes Model
+ * DAO to handle CRUD  on Apps Model
  * All methods returns a Promise
  *
  * =============================
@@ -11,7 +11,7 @@
  * Attributes : /
  *
  * Methods : /
- *		- addBox()
+ *		- addApps()
  *
  *
  * Events : /
@@ -38,22 +38,23 @@ const DB = require('../dal');
 
 
 
-const BoxeDAO = {
+const AppsDAO = {
 
     create : function (nApp) {
-        DB.Boxes.create(nApp,{
+        DB.Apps.create(nApp,{
+            // fields : ['appName', 'clientRedirectUri','useRedirectUri', 'description'],
             include: [{model : DB.Users,  as: 'apps'}]
         }).catch(errorHandler);
     },
 
     getUsersApps : function (id) {
-        return DB.Boxes.findAll({
+        return DB.Apps.findAll({
             where: { owner: id},
         }).catch(errorHandler);
     },
 
     findById :  function (id) {
-        return DB.Boxes.findById(id).catch(errorHandler);
+        return DB.Apps.findById(id).catch(errorHandler);
     },
 
 
@@ -94,4 +95,4 @@ function errorHandler (err){
 
 // Object
 
-module.exports = BoxeDAO;
+module.exports = AppsDAO;

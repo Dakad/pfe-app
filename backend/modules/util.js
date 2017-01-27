@@ -1,7 +1,8 @@
 'use strict';
-
+const util = require("util");
 const crypto =  require('crypto');
-const Promise = require('promise');
+
+const Promise = require('bluebird');
 const nconf = require("nconf");
 const Validator = require('validator');
 const _= require('lodash/core');

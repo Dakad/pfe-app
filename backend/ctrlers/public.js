@@ -41,7 +41,7 @@ const Util = require('../modules/util');
 const ApiError = require('../modules/api-error');
 const DB = require('../db/dal');
 const UsersDAO = require('../db/dao/users');
-const BoxesDAO = require('../db/dao/boxes');
+const AppsDAO = require('../db/dao/apps');
 
 
 
@@ -68,7 +68,10 @@ const validSchema = {
         errorMessage: 'Invalid Application name',
         notEmpty: true,
         isLength: {
-            options: [{ min: 2, max: 50   }],
+            options: [{
+                min: 2,
+                max: 50
+            }],
             errorMessage: 'The name must be between 2 and 50 chars long' // Error message for the validator, takes precedent over parameter message
         },
     },
@@ -83,7 +86,9 @@ const validSchema = {
     'appDescrip': {
         optional: true, // won't validate if field is empty
         isLength: {
-            options: [{ max: 150  }],
+            options: [{
+                max: 150
+            }],
             errorMessage: 'This description is too long. Cut some, please !'
         },
     },
@@ -91,17 +96,17 @@ const validSchema = {
     'email': {
         errorMessage: 'This email is invalid',
         notEmpty: {
-            errorMessage : 'Missing the email to be logged in'
+            errorMessage: 'Missing the email to be logged in'
         },
-        isEmail : {
-          errorMessage : 'Put a valid email to continue'
+        isEmail: {
+            errorMessage: 'Put a valid email to continue'
         }
     },
 
     'pwd': {
         errorMessage: 'This password is invalid',
         notEmpty: {
-            errorMessage : 'Missing the pwd to be logged in'
+            errorMessage: 'Missing the pwd to be logged in'
         }
         // isLength: {
         //     options: [{ min: 2, max: 50   }],
@@ -111,13 +116,13 @@ const validSchema = {
     'pwd2': {
         errorMessage: 'This password confirmation is invalid',
         notEmpty: {
-            errorMessage : 'Missing the confirmation password to be registred'
+            errorMessage: 'Missing the confirmation password to be registred'
         }
     },
 
     'agree': {
-        optional : true,
-        errorMessage : 'Missing the agreement confirmation checked to be registred'
+        optional: true,
+        errorMessage: 'Missing the agreement confirmation checked to be registred'
     }
 
 
@@ -132,20 +137,35 @@ const validSchema = {
  */
 
 
-const getBox = function(req, res, next) {
-    let apps ;
-    if (req.params.app) {
-        req.checkParams('app', 'Invalid name for this box').notEmpty();
-        req.sanitizeParams();
-        apps = BoxesDAO.findById(req.params.app);
-    }else{
-        apps = BoxesDAO.getUsersApps(req.user.id);
-    }
-    apps.then(function(apps) {
-        res.apps = (req.params.app) ? [apps.toJSON()] : apps;
+const listApps = function(req, res, next) {
+    AppsDAO.getUsersApps(req.user.id).then(function(apps) {
+        res.apps = apps;
         next();
     });
+}
 
+
+const getApp = function(req,res,next){
+    let appId ;
+    if (req.params.appId) {
+        req.checkParams('appId', 'Invalid name for this app').notEmpty();
+        req.sanitizeParams();
+        appId = req.params.appId;
+    }else{
+        req.checkQuery('appId', 'Invalid name for this app').notEmpty();
+        req.sanitizeQuery('appId');
+        appId = req.query.appId;
+    }
+
+    req.getValidationResult().then(function(result) {
+        res.locals.errors = result.mapped();
+        if (!result.isEmpty())
+            next(new ApiError.BadRequest('Invalid data sent.'));
+        return AppsDAO.findById(appId);
+    }).then((app) => {
+        res.client = app.toJSON();
+        next();
+    });
 
 }
 
@@ -211,28 +231,28 @@ const afterSignChecked = function(req, res, next) {
 };
 
 
-const addBox = function(req, res, next) {
+const registerApp = function(req, res, next) {
     req.checkBody('appName', 'Missing the application name to be registred').notEmpty();
-    req.checkBody('appName', 'The name must be between 2 and 50 chars long').len(2,50);
+    req.checkBody('appName', 'The name must be between 2 and 50 chars long').len(2, 50);
     req.checkBody('appUri', 'Missing the callback URI to be registred').notEmpty();
 
-    if(req.body.appDescrip)
-        req.checkBody('appDescrip', 'Cut some description').notEmpty().len(1,150);
+    if (req.body.appDescrip)
+        req.checkBody('appDescrip', 'Cut some description').notEmpty().len(1, 150);
 
     req.getValidationResult().then(function(result) {
         req.sanitizeBody();
         res.locals.errors = result.mapped();
-        if (!result.isEmpty())  next();
-        return BoxesDAO.create({
-            clientName : req.body.appName,
-            clientRedirectUri : req.body.appUri,
-            clientUseRedirectUri : req.body.appUseUriAsDefault || false,
-            clientDescription : req.body.appDescrip || null,
-            owner : req.user.id
+        if (!result.isEmpty()) next();
+        return AppsDAO.create({
+            name: req.body.appName,
+            redirectUri: req.body.appUri,
+            useRedirectUri: req.body.appUseUriAsDefault || false,
+            description: req.body.appDescrip || null,
+            owner: req.user.id
         });
-    }).then(function(app){
-        res.redirect(201,'app/'+app.clientId)
-    }).catch(function(err){
+    }).then(function(app) {
+        res.redirect(201, 'apps/' + app.id);
+    }).catch(function(err) {
 
         console.log(err);
     });
@@ -251,7 +271,7 @@ const logout = function(req, res) {
 }
 
 
-const removeBox = function(req, res, next) {
+const deleteApp = function(req, res, next) {
 
 }
 
@@ -264,10 +284,9 @@ const removeBox = function(req, res, next) {
  * Error Handler
  */
 const errorHandler = function(err, req, res, next) {
-    if (!err)
-        err = new Error('Not Found - Something went south');
-    if (!err.status)
-        err.status = 404;
+    if (!err) err = new Error('Not Found - Something went south');
+    if (!err.status) err.status = 404;
+
     logger.error(err);
 
     renderCtrl.errorPage(err, res);
@@ -293,11 +312,15 @@ module.exports = {
     afterSignin: afterSignChecked,
 
 
-    listBox: getBox,
+    listApps: listApps,
 
-    addBox: addBox,
+    getApp: getApp,
 
-    removeBox: removeBox,
+    registerApp: registerApp,
+
+    deleteApp : deleteApp,
+
+
 
     errorHandler: errorHandler
 };

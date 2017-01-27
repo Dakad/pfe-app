@@ -5,37 +5,42 @@ const nconf = require("nconf");
 const Util = require('../../modules/util');
 
 
-const BoxesModel = function(sequelize, DataTypes) {
-  var Boxes = sequelize.define('Boxes', {
-    clientId: { // a unique string representing the registred client
+const AppsModel = function(sequelize, DataTypes) {
+  const Apps = sequelize.define('Apps', {
+    id: { // a unique string representing the registred app
       primaryKey: true,
       type: DataTypes.STRING,
       defaultValue: function() {
         return Util.generateShortUUID();
       },
     },
-    clientName: { // App name required
+    name: { // App name required
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    clientSecret: { //
+    secret: { //
       type: DataTypes.STRING,
     },
-    clientRedirectUri: {
+    redirectUri: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    clientUseRedirectUri: {
+    useredirectUri: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     },
-    clientType: { //  based on their ability to auth securely with the authorization server CONFIDENTIAL(TLS),PUBLIC
+
+    scope : DataTypes.TEXT,
+
+    type: { //  based on their ability to auth securely with the authorization server CONFIDENTIAL(TLS),PUBLIC
       type: DataTypes.ENUM('CONFIDENTIAL', 'PUBLIC'),
       allowNull: true,
     },
 
-    clientDescription : DataTypes.TEXT
+    description : DataTypes.TEXT,
+
+    logo : DataTypes.TEXT
 
 
   }, {
@@ -45,12 +50,12 @@ const BoxesModel = function(sequelize, DataTypes) {
     classMethods: {
       associate: function(models) {
 
-        Boxes.belongsToMany(models.Users, { as: 'consumers', through: models.Codes, foreignKey: 'consumer' });
+        Apps.belongsToMany(models.Users, { as: 'consumers', through: models.AuthApps, foreignKey: 'consumer' });
 
-        Boxes.belongsTo(models.Users, {
+        Apps.belongsTo(models.Users, {
           as: 'apps',
           foreignKey: 'owner'
-        }); // Boxes will keep the FK to Users
+        }); // Apps will keep the FK to Users
 
       }
     },
@@ -58,21 +63,18 @@ const BoxesModel = function(sequelize, DataTypes) {
     // Hooks are function that are called before and
     // after (bulk-) creation/updating/deletion and validation.
     hooks: {
-      beforeCreate: function(box) {
+      beforeCreate: function(app) {
         // First salt to be used as apiId
-        return Util.generateSalt().then(function(salt) {
-          box.clientSecret = salt;
-          // }).then(Util.generateSalt)
-          // .then(function (clientSecret){ // Last salt to be used as clientSecret
-          //     box.clientSecret = clientSecret;
+        return Util.generateSalt().then(function(secret) {
+          app.set('secret',secret);
         });
       },
     }
 
   });
-  return Boxes;
+  return Apps;
 };
 
 
 
-module.exports = BoxesModel;
+module.exports = AppsModel;

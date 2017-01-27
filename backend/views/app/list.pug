@@ -1,38 +1,38 @@
-extends layout
-
+extends ../layout
 block content
   .row.clearfix
     h1.page-header=title
 
-    unless boxes.length
+    unless apps.length
       .jumbotron
         h1 Want access to our API ?
         p You have made a app,  want to access to our API to get data.
         p Before, you app must be registred and to grant acces to the API via a token .
         p
           a.btn.btn-primary.btn-lg(href="app/") Click here to register your app.
+    script(type='text/javascript').
+    - console.log(apps)
 
-
-    unless !boxes.length
+    unless !apps.length
       blockquote.blockquote-reverse
         p This pairs of random characters are your keys to the #[span.text-success kingdom] !
         | Please, don't lose them or publish those on some forum, #[i.fa.fa-stack-overflow] or #[i.fa.fa-github]
         small.lalbel-label-warning Use those wisely and carefully
 
 
-      each box, index in boxes
+      each client in apps
         .panel.panel-primary
           .panel-heading
-            h3.panel-title=box.clientName || box.clientId
+            h3.panel-title=client.name || client.id
           .panel-body
             h3 Your Client ID :
-              code.to-copy=box.clientId
+              code.to-copy=client.id
             h3 Your Client Name :
-              code.to-copy=box.clientName
+              code.to-copy=client.name
             h3 Your Client Callback URL :
-              code.to-copy=box.clientRedirectUri
-            h3 Your secret key #{'for '+box.clientName}:
-              .well.well-sm.to-copy=box.clientSecret
+              code.to-copy=client.redirectUri
+            h3 Your secret key #{'for '+client.name}:
+              .well.well-sm.to-copy=client.secret
           .panel-footer
               button.btn.btn-success(type="button") Edit
               button.btn.btn-danger.right(type="button") Reset code

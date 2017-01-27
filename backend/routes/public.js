@@ -103,15 +103,17 @@ router.get(['/exe', '/training'], renderCtrl.trainingPage);
 router.get(['/doc', '/documentation'], renderCtrl.docPage);
 
 /* GET registred Apps page. */
-//router.param('app', authCtrl.isLogged, publicCtrl.listBox)
-router.get(['/apps(/:app)?', '/manage(/:app)?'],
-        authCtrl.isLogged, publicCtrl.listBox, renderCtrl.boxListPage)
+//router.param('appId', authCtrl.isLogged, publicCtrl.listApps)
+router.get(['/apps', '/manage'],
+        authCtrl.isLogged, publicCtrl.listApps, renderCtrl.appListPage)
+router.get('/apps/:appId',
+        authCtrl.isLogged, publicCtrl.getApp, renderCtrl.appListPage)
 
 router.route('/app')
         .all(authCtrl.isLogged)
-        .get(renderCtrl.boxAddPage)
-        .post(publicCtrl.listBox, publicCtrl.addBox)
-        .delete(publicCtrl.removeBox)
+        .get(renderCtrl.appAddPage)
+        .post(publicCtrl.listApps, publicCtrl.registerApp)
+        .delete(publicCtrl.deleteApp)
 
 
 // catch 404 and forward to error handler

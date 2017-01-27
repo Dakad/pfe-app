@@ -25,7 +25,7 @@
  */
 
 // Built-in
-const Promise = require('promise');
+const Promise = require('bluebird');
 const nconf = require('nconf');
 const express = require('express');
 const favicon = require('serve-favicon');

@@ -51,17 +51,17 @@ const UserModel = function(sequelize, DataTypes) {
     classMethods: {
       associate: function(models) {
         // To keep all apps registred data through the API
-        Users.hasMany(models.Boxes,{
-            foreignKey: 'owner', // Will create a FK in Boxes named 'owner'
+        Users.hasMany(models.Apps,{
+            foreignKey: 'owner', // Will create a FK in Apps named 'owner'
             onDelete: "CASCADE", // If the box is deleted, don't keep any record of it. JUST DELETE
-            as: 'apps', // The FK in Boxes will be aliased as 'owner'.
+            as: 'apps', // The FK in Apps will be aliased as 'owner'.
         }),
 
         // To keep all apps allowed by the user to get data
-        Users.belongsToMany(models.Boxes, {
-            foreignKey: 'app', // Will create a FK in Codes named 'app'.
-            through: models.Codes,
-            as: 'authApps', // The FK in Codes will be aliased/accessible as 'authApps'.
+        Users.belongsToMany(models.Apps, {
+            foreignKey: 'app', // Will create a FK in AuthApps named 'app'.
+            through: models.AuthApps,
+            as: 'authApps', // The FK in AuthApps will be aliased/accessible as 'authApps'.
         });
 
       }
@@ -72,12 +72,11 @@ const UserModel = function(sequelize, DataTypes) {
     hooks: {
         beforeCreate: function (user) {
             return Util.generateSalt().then(function(salt){
-                user.clientId = Util.generateShortUUID();
-                return user.salt = salt;
-            }).then(function (salt){
-                return Util.hashPassword(user.pwd,salt);
-            }).then(function (hashedPwd) {
-                user.pwd = hashedPwd;
+              user.set('salt', salt);
+              return [user.pwd,salt];
+            }).spread(Util.hashPassword)
+            .then(function (hashedPwd) {
+                user.set('pwd', hashedPwd);
             });
         },
     }
