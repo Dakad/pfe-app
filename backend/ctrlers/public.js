@@ -39,7 +39,16 @@ const renderCtrl = require('./render');
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
 const ApiError = require('../modules/api-error');
-const DB = require('../models');
+const DB = require('../db/dal');
+const UsersDAO = require('../db/dao/users');
+const BoxesDAO = require('../db/dao/boxes');
+
+
+
+/**
+ * Variables
+ *
+ */
 
 
 const DEFAULT_COOKIE_OPTIONS = {
@@ -124,29 +133,16 @@ const validSchema = {
 
 
 const getBox = function(req, res, next) {
-    let getUsersApps = DB.Users.findOne({
-        where: {
-            email: req.user.email
-        },
-        exclude: ['pwd', 'salt', 'avatar'],
-        include: [{
-            model: DB.Boxes,
-            as: 'apps',
-            exclude: ['updatedAt', 'owner', 'clientType']
-        }]
-    }).then(function(user) {
-        if (!user)
-            return next(new ApiError.NotFound('Unknown user'))
-        return user.getApps();
-    }).then(function(apps) {
-        console.log(apps);
-        if (req.param.app) {
-            req.checkParams('app', 'Invalid name for this box').notEmpty().isAlphanumeric();
-            req.sanitizeParams();
-
-            // Get only the request app in param in
-        }
-        res.apps = apps;
+    let apps ;
+    if (req.params.app) {
+        req.checkParams('app', 'Invalid name for this box').notEmpty();
+        req.sanitizeParams();
+        apps = BoxesDAO.findById(req.params.app);
+    }else{
+        apps = BoxesDAO.getUsersApps(req.user.id);
+    }
+    apps.then(function(apps) {
+        res.apps = (req.params.app) ? [apps.toJSON()] : apps;
         next();
     });
 
@@ -226,24 +222,18 @@ const addBox = function(req, res, next) {
     req.getValidationResult().then(function(result) {
         req.sanitizeBody();
         res.locals.errors = result.mapped();
-        if (!result.isEmpty())
-            next();
-    }).then(function (){
-
-        const nApp = DB.Boxes.create({
+        if (!result.isEmpty())  next();
+        return BoxesDAO.create({
             clientName : req.body.appName,
             clientRedirectUri : req.body.appUri,
             clientUseRedirectUri : req.body.appUseUriAsDefault || false,
             clientDescription : req.body.appDescrip || null,
             owner : req.user.id
-        },{
-            include: [{model : DB.Users,  as: 'apps'}]
         });
-        return nApp;
     }).then(function(app){
         res.redirect(201,'app/'+app.clientId)
     }).catch(function(err){
-        
+
         console.log(err);
     });
 }

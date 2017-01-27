@@ -106,10 +106,25 @@ const generateShortUUID = function(){
 
 
 
+
+
+/**
+ * Exports
+ */
+
+// Variables
+
 module.exports = {
+
     DEF_COOKIE_AGE : DEF_COOKIE_AGE,
 
     DEF_TOKEN_EXP : DEF_TOKEN_EXP,
+}
+
+
+// Methods
+
+module.exports = {
 
     valideInput : checkInput,
 

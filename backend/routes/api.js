@@ -58,6 +58,6 @@ router.all('/zen',apiCtrl.zen);
  * Exports
  */
 
-// Methods
+// Objects
 
 module.exports = router;

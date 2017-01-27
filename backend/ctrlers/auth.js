@@ -38,7 +38,9 @@ const LocalStrategy = require('passport-local').Strategy;
 const logger = require('../modules/logger');
 const Util = require('../modules/util');
 const ApiError = require('../modules/api-error');
-const DB = require('../models');
+const DB = require('../db/dal');
+const UsersDAO = require('../db/dao/users');
+const BoxesDAO = require('../db/dao/boxes');
 
 
 
@@ -55,14 +57,15 @@ const isAuth = function(req,res,next){
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
     if(!(cookies.isAuth && cookies.accessToken))
         return next(new ApiError.Unauthorized('You shall not pass ! Log in before to access this page !'));
-    Util.validToken(cookies.accessToken).then(function(decodedToken){
-        req.user = decodedToken;
-        res.locals.isAuth = true;
-        next();
-    }).catch(function (err) {
-        res.locals.isAuth = false;
-        console.error(err);
-    })
+    Util.validToken(cookies.accessToken)
+        .then(function(decodedToken){
+            req.user = decodedToken;
+            res.locals.isAuth = true;
+            next();
+        }).catch(function (err) {
+            res.locals.isAuth = false;
+            console.error(err);
+        });
 
 }
 isAuth.unless = unless;
@@ -74,12 +77,9 @@ const logIn = function(req,res,next){
         // Sanitize & clear the input
         req.sanitizeBody('email').normalizeEmail();
         // Go fecth the corresponding user in DB
-        return DB.Users.findOne({
-            attributes : ["id", "email", "name", "salt", "pwd", "isAdmin", "avatar"],
-            where: { email : user.email}
-        });
+        return UsersDAO.findByEmail(user.email);
     }).then(function(dbUser){
-    if (!dbUser)
+        if (!dbUser)
             return Promise.reject(new ApiError(404, 'The user with '+ user.email +' is not registred'));
         return [dbUser, Util.validPassword(user.pwd, dbUser.dataValues.salt, dbUser.dataValues.pwd)];
     }).then(function(datas) {
@@ -103,8 +103,6 @@ const logIn = function(req,res,next){
         if(!err instanceof ApiError)
             err = new ApiError(err);
         next(err);
-    }).done(function(token) {// Call the next middleware
-        console.log('Wesh weshouille')
     });
 };
 
@@ -121,17 +119,13 @@ const signUp = function(req,res,next){
         return user = req.body;
     }).then(function(nUser){
         // Go Fetch a possible registred user with the same email.
-        return DB.Users.findOne({
-            attributes : ["email", "pwd"],
-            where: {email: nUser.email}
-        });
+        return UsersDAO.findByEmail(nUser.email);
     }).then(function(dbUser) {
         if(dbUser)
             return Promise.reject( new ApiError(400,dbUser.email + ' is already taken. Choose another one'));
-        return DB.Users.create(user);
-    }).then(function() {
-        next();
-    }).catch(function(err){
+        return UsersDAO.create(user);
+    }).then(next)
+    .catch(function(err){
         next(err);
     });
 };

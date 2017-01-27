@@ -2,7 +2,7 @@
 
 const nconf = require("nconf");
 
-const Util = require('../modules/util');
+const Util = require('../../modules/util');
 
 
 const BoxesModel = function(sequelize, DataTypes) {

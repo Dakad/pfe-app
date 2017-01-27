@@ -3,7 +3,7 @@
 const nconf = require("nconf");
 
 
-const Util = require('../modules/util');
+const Util = require('../../modules/util');
 
 
 const UserModel = function(sequelize, DataTypes) {

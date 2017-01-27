@@ -32,7 +32,9 @@
  // Custom -Mine
 const Util = require('../modules/util');
 const ApiError = require('../modules/api-error');
-const DB = require('../models');
+const DB = require('../db/dal');
+const UserDAO = require('../db/dao/users');
+const BoxesDAO = require('../db/dao/boxes');
 
 
 

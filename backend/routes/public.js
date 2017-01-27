@@ -103,8 +103,8 @@ router.get(['/exe', '/training'], renderCtrl.trainingPage);
 router.get(['/doc', '/documentation'], renderCtrl.docPage);
 
 /* GET registred Apps page. */
-router.param('appName', publicCtrl.listBox)
-router.get(['/apps(/:appName)?', '/manage(/:appName)?'],
+//router.param('app', authCtrl.isLogged, publicCtrl.listBox)
+router.get(['/apps(/:app)?', '/manage(/:app)?'],
         authCtrl.isLogged, publicCtrl.listBox, renderCtrl.boxListPage)
 
 router.route('/app')

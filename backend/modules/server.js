@@ -38,7 +38,7 @@ const cookieParser = require('cookie-parser');
 
 
 // Custom - Mine
-const DB = require("../models/index");
+const DAL = require("../db/dal");
 const logger = require("./logger");
 
 
@@ -183,7 +183,7 @@ function configRoutes() {
  */
 Server.start = function(cb) {
 
-    return Promise.all([DB.initConnection(), configServer(), configRoutes()])
+    return Promise.all([DAL.initConnection(), configServer(), configRoutes()])
         .then(function () {
             // Hold the instance of server
             Server._server = _app.listen(nconf.get('PORT'));
