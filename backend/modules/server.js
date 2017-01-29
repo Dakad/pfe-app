@@ -44,7 +44,6 @@ const logger = require("./logger");
 
 // Routes
 const apiRoute = require('../routes/api');
-const oauthRoute = require('../routes/oauth');
 const defRoute = require('../routes/public');
 
 
@@ -110,6 +109,9 @@ function configServer() {
             })); // The JSON parsed body will only
             // contain key-value pairs, where the value can be a string or array
 
+            logger.info('[Server] Init the app(Express) with CookieParser ');
+            _app.use(cookieParser(nconf.get('COOKIE_SECRET')));
+
 
             logger.info('[Server] Init the app(Express) with validator middleware :', 'expressValidator');
             _app.use(expressValidator());
@@ -139,10 +141,6 @@ function configServer() {
 function configRoutes() {
     return new Promise(function(fulfill) {
 
-        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/oauth/*');
-        _app.use('/oauth', oauthRoute);
-        oauthRoute.init();
-
         logger.info('[Server - Routes] Init the app(Express) with route for : ', '/api/*');
         _app.use('/api', apiRoute);
         apiRoute.init();
@@ -150,8 +148,6 @@ function configRoutes() {
 
 
         logger.info('[Server - Routes] Init the app(Express) with route for : ', '/*', '/public/*');
-        logger.info('[Server - Routes] Init route / with CookieParser ');
-        _app.use('/', cookieParser(nconf.get('COOKIE_SECRET')));
         _app.use('/public', defRoute);
         _app.use('/', defRoute);
         defRoute.init();

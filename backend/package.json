@@ -8,7 +8,6 @@
     "test": "make test"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.0",
     "bluebird": "^3.4.7",
     "body-parser": "~1.15.2",
     "connect-flash": "^0.1.1",
@@ -18,7 +17,6 @@
     "express": "~4.14.0",
     "express-jwt": "^5.1.0",
     "express-messages": "^1.0.1",
-    "express-oauth-server": "^2.0.0-b1",
     "express-unless": "^0.3.0",
     "express-validator": "^3.1.2",
     "helmet": "^3.1.0",
@@ -26,8 +24,6 @@
     "morgan": "~1.7.0",
     "ms": "^0.7.2",
     "nconf": "^0.8.4",
-    "passport": "^0.3.2",
-    "passport-local": "^1.0.0",
     "pg": "^6.1.2",
     "pg-hstore": "^2.3.2",
     "promise": "^7.1.1",

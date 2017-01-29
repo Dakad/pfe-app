@@ -39,11 +39,28 @@ const DB = require('../dal');
 
 
 const AppsDAO = {
+    build   : function (nApp){
+        return DB.Apps.build(nApp);
+    },
 
-    create : function (nApp) {
-        DB.Apps.create(nApp,{
+    delete : function (id){
+        return DB.Apps.destroy({where : {id : id}});
+    },
+
+    update : function (nApp) {
+        DB.Apps.findOrCreate(nApp,{
             // fields : ['appName', 'clientRedirectUri','useRedirectUri', 'description'],
             include: [{model : DB.Users,  as: 'apps'}]
+        }).catch(errorHandler);
+    },
+
+    create : function (nClient) {
+        let cond;
+        cond = (nClient.id) ? {id: nClient.id} : {name: nClient.name};
+        //const nClient = DB.build();
+        return DB.Apps.findOrCreate({
+            where: cond,
+            defaults: nClient.get({plain: true})
         }).catch(errorHandler);
     },
 
@@ -58,6 +75,11 @@ const AppsDAO = {
     },
 
 
+    checkIfAuth : function (id,secret) {
+        return DB.Apps.findOne({
+            where : {id : id, secret : secret}
+        }).catch(errorHandler);
+    }
 
 
 
@@ -79,14 +101,6 @@ function errorHandler (err){
     debugger;
 
 }
-
-
-
-
-
-
-
-
 
 
 /**

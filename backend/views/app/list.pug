@@ -1,4 +1,5 @@
 extends ../layout
+
 block content
   .row.clearfix
     h1.page-header=title
@@ -10,8 +11,7 @@ block content
         p Before, you app must be registred and to grant acces to the API via a token .
         p
           a.btn.btn-primary.btn-lg(href="app/") Click here to register your app.
-    script(type='text/javascript').
-    - console.log(apps)
+
 
     unless !apps.length
       blockquote.blockquote-reverse
@@ -19,11 +19,28 @@ block content
         | Please, don't lose them or publish those on some forum, #[i.fa.fa-stack-overflow] or #[i.fa.fa-github]
         small.lalbel-label-warning Use those wisely and carefully
 
-
       each client in apps
         .panel.panel-primary
-          .panel-heading
-            h3.panel-title=client.name || client.id
+          .panel-heading.clearfix
+            label.panel-title=client.name || "Client "+client.id
+            .btn-group.pull-right
+              a.btn.btn-success(href="/app/"+client.id+"?action=edit") Edit
+              button.btn.btn-default.dropdown-toggle(type='button', data-toggle='dropdown')
+                span.caret
+              ul.dropdown-menu(role='menu')
+                li
+                  button.btn.btn-lg.btn-link#reset(data-link="/app/"+client.id+"?action=reset" data-toggle="modal" data-target="#confirmReset")
+                    span.fa.fa-refresh  Reset token
+                li
+                  button.btn.btn-lg.btn-link#delete(data-link="/app/"+client.id+"?action=delete" data-toggle="modal" data-target="#confirmDelete")
+                    span.fa.fa-trash  Delete
+                li.divider
+                li
+                  a(href="/app/#{client.id}?action=export&to=json")
+                    span.fa.fa-file-text-o  Export to .json
+                li
+                  a(href="/app/#{client.id}?action=export&to=env")
+                    span.fa.fa-file-code-o  Export to .env
           .panel-body
             h3 Your Client ID :
               code.to-copy=client.id
@@ -33,6 +50,39 @@ block content
               code.to-copy=client.redirectUri
             h3 Your secret key #{'for '+client.name}:
               .well.well-sm.to-copy=client.secret
-          .panel-footer
-              button.btn.btn-success(type="button") Edit
-              button.btn.btn-danger.right(type="button") Reset code
+            h3 Your access token :
+              .well.well-sm.to-copy=client.accessToken
+
+
+      // Modal - Confirmation reset tokens
+      #confirmReset.modal.fade(tabindex='-1', role='dialog', aria-labelledby='myModalConfirmReset')
+        .modal-dialog(role='document')
+          .modal-content
+            .modal-header
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') ×
+              h4#myModalLabel.modal-title Confirmation
+            .modal-body
+              p The reset of your token will unauthorize all current versions of your app using the token.
+              p It's usefull if your access token has been leaked.
+              p Do you still want to reset the access token ?
+            .modal-footer
+              button.btn.btn-dangerdefault(type='button', data-dismiss='modal') Cancel
+              a.btn.btn-warning.btn-confirm#btnConfirmReset Reset
+
+      // Modal - Confirmation reset tokens
+      #confirmDelete.modal.fade(tabindex='-1', role='dialog', aria-labelledby='myModalConfirmDelete')
+        .modal-dialog(role='document')
+          .modal-content
+            .modal-header
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') ×
+              h4#myModalLabel.modal-title Confirmation
+            .modal-body
+              p What ! Do you really want to remove your app ?
+              p The users using your app will be blocked out.
+              p Do you still want to remove this app from our system ?
+
+            .modal-footer
+              button.btn.btn-dangerdefault(type='button', data-dismiss='modal') Cancel
+              a.btn.btn-danger.btn-confirm#btnConfirmDelete Delete

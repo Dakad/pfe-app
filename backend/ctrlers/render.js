@@ -18,7 +18,7 @@
  *		+ renderAboutPage()
  *		+ renderDocPage()
  *		+ renderExePage()
- *		+ renderAppAddPage()
+ *		+ renderAppUpsertPage()
  *		+ renderAppListPage()
  *		+ renderErrorPage()
  *		+ errorHandler()
@@ -85,22 +85,24 @@ const renderAboutPage = function(req, res) {
 };
 
 const renderAppListPage = function(req, res) {
-     return res.render('app/list', {
+      res.render('app/list', {
         title : 'List of your registred apps',
         apps : res.apps || [res.client]
     });
 };
 
-const renderAppAddPage = function(req, res) {
-    return res.render('app/add', {
-        title : 'Register a new app'
+const renderAppUpsertPage = function(req, res) {
+    return res.render('app/upsert', {
+        title : res.title,
+        action: res.action,
+        client : res.client
     });
 }
 
 
 const renderDialogPage = function (req,res,next){
     return res.render('dialog',{
-       client : req.client,
+       client : res.client || req.client ,
        user   : req.user
     });
 }
@@ -139,7 +141,7 @@ module.exports = {
 
     appListPage: renderAppListPage,
 
-    appAddPage: renderAppAddPage,
+    appUpsertPage: renderAppUpsertPage,
 
     trainingPage: renderExePage,
 

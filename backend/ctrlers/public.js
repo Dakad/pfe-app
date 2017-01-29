@@ -32,6 +32,7 @@
  */
 // Built-in
 const _ = require("lodash/core");
+const unless = require('express-unless');
 
 
 // Custom - Mine
@@ -54,7 +55,7 @@ const AppsDAO = require('../db/dao/apps');
 const DEFAULT_COOKIE_OPTIONS = {
     httpOnly: true,
     signed: true,
-}
+};
 
 
 const validSchema = {
@@ -132,38 +133,99 @@ const validSchema = {
 
 
 
+
+
+/*********************************
+ * Route for GET              *
+ *********************************/
+
+
+const appHandler = function(req,res,next){
+    const actions = ['edit','reset','delete','export'];
+
+    switch (req.query.action) {
+        case 'edit':
+            res.title = 'Edit '+ res.client.name;
+            res.action = 'POST';
+            break;
+        case 'reset': // Reset the client accessToken
+            return resetClientToken(res.client.id).then(()=>{
+                res.flash('success', 'Token reset for '+res.client.name);
+                return res.redirect('/apps');
+            });
+        case 'delete': // Reset this shitapp
+            return AppsDAO.delete(res.client.id).then(() =>{
+                res.flash('warning',res.client.name + ' have been removed !');
+                return res.redirect('/apps');
+            });
+        case 'export':
+
+            break;
+        default:
+            res.action = 'POST';
+            res.title = 'Register a new app'
+
+    }
+    return renderCtrl.appUpsertPage(req,res);
+}
+
 /**
- * Route for GET
+ * Reset the access Token of client
+ *
  */
+function resetClientToken(id){
+    return AppsDAO.findById(id).then(function(app){
+        if(!app)
+            return new ApiError.NotFound('This client is not registred.');
+        return Util.generateSalt().then(function(secret) {
+            app.set('secret',secret);
+            return [app.get('id'),app.get('secret'),32];
+        }).spread(Util.hashPassword)
+        .then((token) => {
+            app.set('accessToken',token);
+            return app.save();
+        });
+    })
+}
 
 
-const listApps = function(req, res, next) {
+/**
+ * List all registred clients of the auth user.
+ *
+ */
+const listClients = function(req, res, next) {
     AppsDAO.getUsersApps(req.user.id).then(function(apps) {
         res.apps = apps;
         next();
     });
 }
 
-
-const getApp = function(req,res,next){
+/**
+ * Get a requested client speified in the URL parameter/query.
+ *
+ */
+const getClient = function(req,res,next){
     let appId ;
     if (req.params.appId) {
         req.checkParams('appId', 'Invalid name for this app').notEmpty();
         req.sanitizeParams();
         appId = req.params.appId;
-    }else{
-        req.checkQuery('appId', 'Invalid name for this app').notEmpty();
-        req.sanitizeQuery('appId');
-        appId = req.query.appId;
+    }else{ // Req from outside (API)
+        if(req.query.client_id){
+            req.checkQuery('client_id', 'Invalid name for this app').notEmpty();
+            req.sanitizeQuery('client_id');
+            appId = req.query.client_id;
+        }
     }
 
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
-        if (!result.isEmpty())
-            next(new ApiError.BadRequest('Invalid data sent.'));
+        if (!result.isEmpty()) throw new new ApiError.BadRequest('Invalid data sent.');
         return AppsDAO.findById(appId);
     }).then((app) => {
+        if(!app) throw new ApiError.NotFound('Unknown client. Not registred');
         res.client = app.toJSON();
+        res.client.hasLogo = (app.get('logo') != null);
         next();
     });
 
@@ -171,10 +233,17 @@ const getApp = function(req,res,next){
 
 
 
-/**
- * Route for POST
- */
 
+
+/*********************************
+ * Route for POST                *
+ *********************************/
+
+
+
+/**
+ * Entry point for POST /login
+ */
 const checkLoginPosted = function(req, res, next) {
     // req.checkBody(validSchema);
     req.checkBody('email', 'Missing the email to be logged in').notEmpty();
@@ -183,18 +252,22 @@ const checkLoginPosted = function(req, res, next) {
 
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
-        if (result.isEmpty())
-            next();
+        if (!result.isEmpty())
+            return next(new ApiError.BadRequest('Invalid Data sent'));
+        next();
     });
 }
 
+/**
+ * What to do after a successful login.
+ */
 const afterLoginChecked = function(req, res) {
     // By default, the cookie expires when the browser is closed.
     let cookieOpts = DEFAULT_COOKIE_OPTIONS;
-    let exp = new Date();
 
     // if user want to be auto-logged ?
     if (req.body.rememberMe) {
+        let exp = new Date();
         cookieOpts.maxAge = Util.DEF_COOKIE_AGE;
         exp.setTime(exp.getTime() + Util.DEF_COOKIE_AGE);
         cookieOpts.expires = exp.toGMTString();
@@ -202,10 +275,19 @@ const afterLoginChecked = function(req, res) {
 
     res.cookie('accessToken', req.user.token, cookieOpts);
     res.cookie('isAuth', true, cookieOpts);
-    // req.flash('success','Welcome back !.');
-    res.redirect('manage');
-}
 
+    res.flash('info', {
+        title : 'Welcome back !',
+        msg : 'It\'s goot to see u alive !'
+    });
+
+    res.redirect('/manage');
+};
+
+
+/**
+ * Entry point for POST /signup
+ */
 const checkSignPosted = function(req, res, next) {
     req.checkBody('email', 'Missing the email to be registred').notEmpty();
     req.checkBody('email', 'Put a valid email to be registred').isEmail();
@@ -223,15 +305,24 @@ const checkSignPosted = function(req, res, next) {
 
 }
 
+/**
+ * What to do after a successful signup.
+ */
 const afterSignChecked = function(req, res, next) {
-
-    req.flash('success', 'Welcome onboard !\n You can go log in now.');
-
-    res.render('login');
+    res.flash('success', {
+        title : 'Welcome onboard!',
+        msg : 'You can go log in now.'
+    });
+    return res.redirect('/login');
 };
 
 
-const registerApp = function(req, res, next) {
+/**
+ * Handle the insert or update of a client.
+ */
+const upsertApp = function(req, res, next) {
+    const isEditing = (req.query.action && req.query.action === "edit");
+    let nApp;
     req.checkBody('appName', 'Missing the application name to be registred').notEmpty();
     req.checkBody('appName', 'The name must be between 2 and 50 chars long').len(2, 50);
     req.checkBody('appUri', 'Missing the callback URI to be registred').notEmpty();
@@ -242,37 +333,49 @@ const registerApp = function(req, res, next) {
     req.getValidationResult().then(function(result) {
         req.sanitizeBody();
         res.locals.errors = result.mapped();
-        if (!result.isEmpty()) next();
-        return AppsDAO.create({
+        if (!result.isEmpty())
+            return next(new ApiError.BadRequest('Invalid data sent'));
+        nApp = AppsDAO.build({
+            id: req.body.appId || undefined,
             name: req.body.appName,
             redirectUri: req.body.appUri,
             useRedirectUri: req.body.appUseUriAsDefault || false,
             description: req.body.appDescrip || null,
             owner: req.user.id
         });
-    }).then(function(app) {
-        res.redirect(201, 'apps/' + app.id);
+        return AppsDAO.create(nApp);
+    }).spread(function(client, created) {
+        if(!isEditing && !created){ // req for new client but existing ?
+            //res.client = req.body;
+            return res.flash('warning','This name is not available');
+            //return renderCtrl.appUpsertPage(req,res);
+        }
+        if(isEditing){ // req for editing an client
+            client.update(nApp.get({plain: true}));
+            res.flash('success','All odification made saved');
+        }else{
+            res.flash('success', client.name +' is registred');
+        }
+        return res.redirect('/apps');
     }).catch(function(err) {
-
         console.log(err);
     });
 }
 
 
-/**
+
+
+/*********************************
  * Route for DELETE
- */
+ *********************************/
+
 
 const logout = function(req, res) {
     req.clearCookies();
     req.session = null; // Destroy session
     res.locals.isAuth = false;
+    res.flash('info', 'You are disconnect !');
     res.redirect('home');
-}
-
-
-const deleteApp = function(req, res, next) {
-
 }
 
 
@@ -311,14 +414,13 @@ module.exports = {
     signPosted: checkSignPosted,
     afterSignin: afterSignChecked,
 
+    appHandler : appHandler,
 
-    listApps: listApps,
+    listClients: listClients,
 
-    getApp: getApp,
+    getClient: getClient,
 
-    registerApp: registerApp,
-
-    deleteApp : deleteApp,
+    upsertApp: upsertApp,
 
 
 

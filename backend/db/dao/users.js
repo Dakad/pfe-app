@@ -41,9 +41,18 @@ const DB = require('../dal');
 const UserDAO = {
 
     create: function(nUser) {
-        return DB.Users.create(nUser,{
-            fields : ['pwd','email','salt']
-        }).catch(errorHandler);
+        nUser = DB.Users.build({
+            email : nUser.email,
+            pwd : nUser.pwd
+        });
+        return DB.Users.findOrCreate({
+            where: {id: nUser.get('email')},
+            defaults : nUser.get({plain: true})
+        }).spread(function(user,created){
+            if (!created)
+                throw new ApiError(400, user.email + ' is already taken. Choose another one');
+            return created;
+        });
     },
 
 

@@ -47,26 +47,35 @@ const authCtrl = require('../ctrlers/auth');
 
 
 router.init = function (){
-    router.use(flash());
-
     router.use(cookieParser(nconf.get('COOKIE_SECRET')));
-
-    router.use(cookieSession({
-        keys : [ nconf.get('COOKIE_SECRET')],
-        secret : nconf.get('COOKIE_SECRET'),
-        maxAge: 24 * 60 * 60, // 1 Week
-        httpOnly : true,
-    }));
 
 }
 
 
 // First Middleware to handle an incoming request
 router.use((req, res, next) => {
-
+    // Locals available during the request lifetime
+    // and served to the rendered page.
     res.locals.currentUrl = req.path;
-    res.locals.input = req.body;
-//    res.locals.messages = expresMessages(req,res);
+    res.locals.input = req.body; // Get the inputted form
+    res.locals.flashMsg = req.cookies.flashMsg; // Get saved flashMsg
+    res.clearCookie('flashMsg'); // Delete the saved msg;
+
+    // To save flash msg into cookies for the next call.
+    res.flash = function (type,msg) {
+        let flashMsg = req.cookies.flashMsg;
+        if(!flashMsg || !flashMsg[type]){
+            flashMsg = {};
+            flashMsg[type] = [];
+        }
+        if(typeof msg === 'string' )
+            msg = {'title':'','msg':msg}
+        flashMsg[type].push(msg);
+        res.cookie('flashMsg', flashMsg, { httpOnly: true });
+        res.locals.flashMsg = flashMsg;
+    }
+
+
     next();
 });
 
@@ -86,7 +95,7 @@ router.route('/login')
 /* GET-POST signup page. */
 router.route('/signup')
     .get(renderCtrl.signupPage)
-    .post([publicCtrl.signPosted,authCtrl.registerMe,renderCtrl.signupPage]);
+    .post([publicCtrl.signPosted,authCtrl.registerMe,publicCtrl.afterSignin]);
 
 /* GET about page. */
 router.get('/logout', publicCtrl.logMeOut);
@@ -103,17 +112,21 @@ router.get(['/exe', '/training'], renderCtrl.trainingPage);
 router.get(['/doc', '/documentation'], renderCtrl.docPage);
 
 /* GET registred Apps page. */
-//router.param('appId', authCtrl.isLogged, publicCtrl.listApps)
+router.param('appId', publicCtrl.getClient);
 router.get(['/apps', '/manage'],
-        authCtrl.isLogged, publicCtrl.listApps, renderCtrl.appListPage)
-router.get('/apps/:appId',
-        authCtrl.isLogged, publicCtrl.getApp, renderCtrl.appListPage)
+        authCtrl.isLogged, publicCtrl.listClients, renderCtrl.appListPage)
 
-router.route('/app')
+router.get('/apps/:appId',
+        authCtrl.isLogged, publicCtrl.getClient, renderCtrl.appListPage)
+
+
+// POST new app - DELETE
+router.route('/app/(:appId)?')
         .all(authCtrl.isLogged)
-        .get(renderCtrl.appAddPage)
-        .post(publicCtrl.listApps, publicCtrl.registerApp)
-        .delete(publicCtrl.deleteApp)
+        .get(publicCtrl.appHandler) // Get the page to add new app
+        .post(publicCtrl.upsertApp) // Adding or editing new app
+//        .delete(publicCtrl.deleteApp) // Delete this page
+
 
 
 // catch 404 and forward to error handler

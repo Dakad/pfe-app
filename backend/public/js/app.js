@@ -20,4 +20,14 @@ $(function() {
     }, function() {
         $btnCopy.hide();
     });
+
+
+    $('#reset,#delete').click(function(){
+        var $btn = $(this), $modal = $($btn.data('target'));
+        $modal.find('.btn-confirm').attr('href',$btn.data("link"));
+    });
+
+
+
+
 });

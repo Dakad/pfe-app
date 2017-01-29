@@ -1,13 +1,14 @@
 extends ./layout
 
+
 block content
   .row.clearfix
-    if (!user || !user.isAuth)
+    if (!isAuth | !user)
       .col-md-5
         include ./dialog/login
 
     .col-md-6.col-md-offset-1
-      if(app && app.hasLogo)
+      if(client && client.hasLogo)
         include ./dialog/grant-alt
       else
         include ./dialog/grant

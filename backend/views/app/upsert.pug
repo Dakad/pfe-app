@@ -3,15 +3,23 @@ extends ../layout
 block content
   .row.clearfix
     h1.page-header=title
+    - var attr = {};
+    - client = (!client) ? {} : client;
+    - if(client && client.id ) attr.value = client.id;
 
-  form.form-horizontal(method="POST")
+  // (client ? value=client.id : '')
+
+  form.form-horizontal(method=action)
     fieldset
       legend Fill this form with information about your application.
+      .form-group
+        input(name='appId', type="hidden")&attributes(attr)
       .form-group
         label.col-lg-2.control-label(for="appName") Name
         .col-lg-10
           input#appName.form-control(name='appName',
                   type="text",
+                  value=client.name || ''
                   required,
                   placeholder="Your application name",
                   minlength="2", maxlength="50"
@@ -35,23 +43,24 @@ block content
           input#appUri.form-control(name="appUri",
                 type="url",
                 required,
+                value=client.redirectUri || ''
                 placeholder="Callback Redirection URL")
 
           span.help-block The url to be callback by the oAuth Server for your token
           .checkbox
             label
-              input(type="checkbox", checked="true",name="appUseUriAsDefault",value="true")
+              input(type="checkbox", checked="true",name="appUseUriAsDefault",value=client.useRedirectUri || "true")
               | Use by default
 
       .form-group
         label.col-lg-2.control-label(for="appDescrip") Description
 
         .col-lg-10
-          textarea#appDescrip.form-control(rows="3", name="appDescrip",maxlength='145')
+          textarea#appDescrip.form-control(rows="3", name="appDescrip",maxlength='145')=client.description
 
           span.help-block What's your application about ? Give a little description, please ! (max: 140 chars)
 
       .form-group
         .col-lg-10.col-lg-offset-2
-          button.btn.btn-success.btn(type="submit") Register
+          button.btn.btn-success.btn(type="submit")=(client ? 'Save' : 'Register')
 

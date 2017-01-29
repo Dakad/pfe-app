@@ -26,7 +26,7 @@ const AppsModel = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false
     },
-    useredirectUri: {
+    useRedirectUri: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     },
@@ -40,8 +40,9 @@ const AppsModel = function(sequelize, DataTypes) {
 
     description : DataTypes.TEXT,
 
-    logo : DataTypes.TEXT
+    logo : DataTypes.TEXT,
 
+    accessToken : DataTypes.STRING,
 
   }, {
     comment: "Contains the registered client app using the route '/api' ",
@@ -67,8 +68,15 @@ const AppsModel = function(sequelize, DataTypes) {
         // First salt to be used as apiId
         return Util.generateSalt().then(function(secret) {
           app.set('secret',secret);
-        });
+          return [app.get('id'),app.get('secret'),32];
+        }).spread(Util.hashPassword)
+        .done((token) => app.set('accessToken',token));
       },
+
+      afterFind : function(app) {
+      }
+
+
     }
 
   });

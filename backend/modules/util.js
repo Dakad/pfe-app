@@ -9,7 +9,7 @@ const _= require('lodash/core');
 const jwt = require('jsonwebtoken');
 const shortId = require("shortid")
 const ms = require("ms");
-shortId.characters('0123456789@bcdefghijklmnopqrstuµvwxyz_AßCD€FGH!JKLMNOPQR$TUVWXYZ');
+shortId.characters('0123456789a@bcdefghijklmnopqrstuvwxyz_ABCDEFGH!JKLMNOPQR$TUVWXYZ');
 
 
 
@@ -69,7 +69,6 @@ const generateToken = function (claims,secret) {
         claims.exp = (!claims.exp) ? DEF_TOKEN_EXP : claims.exp ;
         return fulfill(jwt.sign(claims,secret));
     });
-
 }
 
 /**
@@ -85,8 +84,9 @@ const generateSalt = function (){
  * Hash the password with a givem salt.
  *
  */
-const hashPassword = function (pwd,salt) {
-    return Promise.resolve(crypto.pbkdf2Sync(pwd, salt, 1000,64).toString('hex'))
+const hashPassword = function (pwd,salt,length) {
+    length = (!length) ? 64 : length;
+    return Promise.resolve(crypto.pbkdf2Sync(pwd, salt, 1000,length).toString('hex'))
 }
 
 

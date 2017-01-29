@@ -30,11 +30,10 @@
 const nconf = require('nconf');
 const _ = require("lodash/core");
 const unless = require('express-unless');
-const oAuthServer = require('express-oauth-server');
 
 
 // Custom -Mine
-const logger = require('../modules/logger');
+const renderCtrl = require('./render');
 const Util = require('../modules/util');
 const ApiError = require('../modules/api-error');
 const DB = require('../db/dal');
@@ -92,12 +91,11 @@ const logIn = function(req, res, next) {
         return UsersDAO.findByEmail(user.email);
     }).then(function(dbUser) {
         if (!dbUser)
-            return Promise.reject(new ApiError(404, 'The user with ' + user.email + ' is not registred'));
+            throw new ApiError(404, 'The user with ' + user.email + ' is not registred');
         return [dbUser, Util.validPassword(user.pwd, dbUser.get('salt'), dbUser.get('pwd'))];
     }).spread(function(dbUser,isValidPwd) {
         if (!isValidPwd)
-            return Promise.reject(new ApiError(401, 'Unknown user'));
-
+            throw new ApiError(401, 'Unknown user');
         req.user = dbUser.toJSON();
         req.user.salt = req.user.pwd = undefined; // REmove the salt and pwd before return
         // Generate a token {id,expTime} signed with env['TOKEN_SECRET']
@@ -117,6 +115,7 @@ const logIn = function(req, res, next) {
     });
 };
 
+
 /**
  * Handle the signup on the public
  *
@@ -131,17 +130,11 @@ const signUp = function(req, res, next) {
             req.sanitizeBody();
             req.sanitizeBody('email').normalizeEmail();
 
-            user = req.body;
-            return user.email;
-        }).then(UsersDAO.findByEmail) // Go Fetch a possible registred user with the same email.
-        .then(function(dbUser) {
-            if (dbUser)
-                return Promise.reject(new ApiError(400, dbUser.email + ' is already taken. Choose another one'));
-            return UsersDAO.create(user);
-        }).then(function(){
+            return req.body;
+        }).then(UsersDAO.create) // Go Fetch a possible registred user with the same email.
+        .then(function(created) {
             return next();
-        })
-        .catch(function(err) {
+        }).catch(function(err) {
             next(err);
         });
 };
@@ -151,95 +144,50 @@ const signUp = function(req, res, next) {
 
 
 /*********************************
- * oAuth call
+ * Auth call from outside
  *********************************/
 
-
 const checkApiToken = function(req, res, next) {
-    //    console.log(req.headers);
-    if (!_.isEmpty('')) {
-
-    }
     // Check if token && token is mine
     // If ok, next(true)
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
     next();
 }
 
-
-const oAuthModel = {
-
-    getAccessToken: function(bearerToken) {
-        return pg.query('SELECT access_token, access_token_expires_on, client_id, refresh_token, refresh_token_expires_on, user_id FROM oauth_tokens WHERE access_token = $1', [bearerToken])
-            .then(function(result) {
-                var token = result.rows[0];
-                return {
-                    accessToken: token.access_token,
-                    clientId: token.client_id,
-                    expires: token.expires,
-                    userId: token.userId
-                };
-            });
-    },
-
-
-    getClient: function*(clientId, clientSecret) {
-        return pg.query('SELECT client_id, client_secret, redirect_uri FROM oauth_clients WHERE client_id = $1 AND client_secret = $2', [clientId, clientSecret])
-            .then(function(result) {
-                var oAuthClient = result.rows[0];
-
-                if (!oAuthClient) {
-                    return;
-                }
-
-                return {
-                    clientId: oAuthClient.client_id,
-                    clientSecret: oAuthClient.client_secret
-                };
-            });
-    },
-
-
-    getRefreshToken: function*(bearerToken) {
-        return pg.query('SELECT access_token, access_token_expires_on, client_id, refresh_token, refresh_token_expires_on, user_id FROM oauth_tokens WHERE refresh_token = $1', [bearerToken])
-            .then(function(result) {
-                return result.rowCount ? result.rows[0] : false;
-            });
-    },
-
-
-    getUser: function*(username, password) {
-        return pg.query('SELECT id FROM users WHERE username = $1 AND password = $2', [username, password])
-            .then(function(result) {
-                return result.rowCount ? result.rows[0] : false;
-            });
-    },
-
-
-    saveAccessToken: function*(token, client, user) {
-        return pg.query('INSERT INTO oauth_tokens(access_token, access_token_expires_on, client_id, refresh_token, refresh_token_expires_on, user_id) VALUES ($1, $2, $3, $4)', [
-            token.accessToken,
-            token.accessTokenExpiresOn,
-            client.id,
-            token.refreshToken,
-            token.refreshTokenExpiresOn,
-            user.id
-        ]).then(function(result) {
-            return result.rowCount ? result.rows[0] : false;
-        });
-    },
-
-
+/**
+ * Show the page to allow the user to grant a client.
+ */
+const dialogPage = function (req,res) {
+    res.locals.query =  '?'+Object.keys(req.query).reduce((p,q,i) => {
+        return (q +'='+ req.query[q] + ((p) ? '&'+p :''));
+    },'');
+    return renderCtrl.dialogPage(req,res);
 }
 
-// Add OAuth server.
-const oAuth = new oAuthServer({
-    debug: true,
-    model: oAuthModel,
-    useErrorHandler: true,
-    continueMiddleWare: true,
+/**
+ * The user allowed the client to gain acces to his data.
+ */
+const grantApp = function (req,res,next) {
+    console.log(req.body);
+    if(req.body.choice === 'yes')
+        next();
 
-});
+};
+
+
+/**
+ * Error Handler
+ */
+const errorHandler = function(err, req, res, next) {
+    if(req.path === '/grant')
+        return dialogPage(req,res);
+
+
+
+    debugger;
+};
+
+
 
 
 
@@ -255,17 +203,24 @@ module.exports = {
 }
 
 
-
 // Methods
 module.exports = {
+    errorHandler : errorHandler,
 
     isLogged: isAuth,
 
-    validToken: checkApiToken,
+    authorize : checkApiToken,
 
     logMe: logIn,
 
     registerMe: signUp,
 
-    getOAuth: function(){ return oAuth},
+    dialogPage : dialogPage,
+
+    //afterLoggedForGrant : afterLogged,
+
+    grant   : grantApp,
+
+
+
 };

@@ -6,9 +6,9 @@ html(lang='en')
     include ./_partials/_navbar-header
 
     .container
-      if(messages)
+      if(flashMsg)
         .row.clearfix
-          != messages('./_partials/_flash-msg', locals)
+          include ./_partials/_flash-msg
       block content
 
 
