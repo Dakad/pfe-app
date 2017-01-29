@@ -341,6 +341,7 @@ const upsertApp = function(req, res, next) {
             redirectUri: req.body.appUri,
             useRedirectUri: req.body.appUseUriAsDefault || false,
             description: req.body.appDescrip || null,
+            logo : req.body.appLogo,
             owner: req.user.id
         });
         return AppsDAO.create(nApp);

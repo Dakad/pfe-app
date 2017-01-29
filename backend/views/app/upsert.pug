@@ -12,6 +12,29 @@ block content
   form.form-horizontal(method=action)
     fieldset
       legend Fill this form with information about your application.
+
+      .form-group
+        label.col-lg-2.control-label(for="appLogo") Logo
+        .col-lg-10
+          .col-lg-6
+            input#appChosenLogo(name='appLogo', type="hidden")
+            input#appLogo.form-control(type='file',accept="image/jpg,image/jpeg")
+            br
+            dl#fileDetails.hidden.dl-horizontal
+              dt File :
+              dd#fileName
+              dt Type :
+              dd#fileType
+              dt Taille :
+              dd#fileSize
+              dt URL temp. :
+              dd#fileSrc
+          .col-lg-4.col-lg-offset-2
+            canvas.hidden#canv(width=250 height=200)
+            // span.help-block#canDesc Chosen logo - Amazinly beautifull logo of your app
+
+
+
       .form-group
         input(name='appId', type="hidden")&attributes(attr)
       .form-group

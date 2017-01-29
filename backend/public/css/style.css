@@ -33,3 +33,6 @@ footer {
     position: fixed;
     min-width: 15%;
 }
+
+
+canvas{border:2px solid black;}
