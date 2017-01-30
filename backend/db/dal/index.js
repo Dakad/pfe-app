@@ -73,16 +73,19 @@ const connect = function() {
             const nbPool = nconf.get('DB_CONFIG').pool.min + ' - ' + nconf.get('DB_CONFIG').pool.max;
             logger.info('[DB] Init the DB with the pool : Client  Min - MAX. ', nbPool);
             return  DB.sequelize.authenticate();
+        }).then(() => DB.sequelize.showAllSchemas({logging:false}))
+        .then(function(schemas){
+            if(schemas.indexOf(nconf.get('DATABASE_SCHEMA'))<0) // No schema with DB_SCHEMA
+                return DB.sequelize.createSchema(nconf.get('DATABASE_SCHEMA'));
         })
-        // .then(function() {DB.sequelize.sync({force:true})})
-        .then(function() {DB.sequelize.sync({logging:false})}) // Create all tables if they doesn't exist in database
+        .then(() =>DB.sequelize.sync()) // Create all tables if they doesn't exist in database
+        // .then(function() {DB.sequelize.sync({force:true})}) // DROP TABLES before CREATE
         .then(function() {
             const urlDB = nconf.get('DATABASE_USER') +'@'+nconf.get('DATABASE_SERVER')+  '~'+nconf.get('DATABASE_NAME');
             logger.info('[DB] Connection has been established successfully to :',urlDB);
         }).catch(function(err) {
             throw new Error('[DB] Unable to connect to the DB - ' + err.message);
         });
-
 };
 
 

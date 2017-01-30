@@ -47,7 +47,7 @@ const authCtrl = require('../ctrlers/auth');
 
 
 router.init = function (){
-    router.use(cookieParser(nconf.get('COOKIE_SECRET')));
+    router.use(cookieParser(nconf.get('APP_COOKIE_SECRET')));
 
 }
 

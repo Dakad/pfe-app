@@ -1,10 +1,9 @@
 'use strict';
 
 
-const jsonApiResponse = require("../public/api-response-status.json");
-
 const SimpleError = require('simple-error');
 
+const jsonApiResponse = require("../static/api-response-status.json");
 
 
 
@@ -39,25 +38,49 @@ const ApiError = SimpleError.define('ApiError',{
 
 
 
-/**
+/*********************************
  * All possbile Error coming from the API.
- *
- */
+ *********************************/
 
+
+/**
+ * Error 204 - No Content
+ */
 ApiError.NoContent = SimpleError.define('ApiError',{ status: 204 });
 
+/**
+ * Error 400 - Bad Request
+ */
 ApiError.BadRequest = SimpleError.define('ApiError',{ status: 400 });
 
+/**
+ * Error 401 - Unauthorized
+ */
 ApiError.Unauthorized = SimpleError.define('ApiError',{ status: 401 });
 
+/**
+ * Error 403 - Forbidden
+ */
 ApiError.Forbidden = SimpleError.define('ApiError',{ status: 403 });
 
+/**
+ * Error 404 - Not Found
+ */
 ApiError.NotFound = SimpleError.define('ApiError');
 
+/**
+ * Error 405 - Method Not Allowed
+ */
 ApiError.MethodNotAllowed = SimpleError.define('ApiError',{ status: 405 });
 
+/**
+ * Error 409 - Conflict
+ */
 ApiError.Conflict = SimpleError.define('ApiError',{ status: 409 });
 
+/**
+ * Error 500 - Internal Server Error
+ */
 ApiError.InternalError = SimpleError.define('ApiError',{ status: 500 });
 
 

@@ -66,7 +66,7 @@ const Server = {};
  *
  */
 function getBindedServerPort() {
-    return (Server._server && Server._server.address()) ? Server._server.address().port : nconf.get('PORT');
+    return (Server._server && Server._server.address()) ? Server._server.address().port : nconf.get('APP_PORT');
 }
 
 
@@ -78,7 +78,7 @@ function getBindedServerPort() {
  */
 function configServer() {
     return new Promise(function(fulfill) {
-            let folder = path.join(__dirname, '..', 'public');
+            let folder = path.join(__dirname, '..', 'static');
             logger.info('[Server] Init the app(Express) with static folder :', folder);
             _app.use(express.static(folder));
 
@@ -111,7 +111,7 @@ function configServer() {
             // contain key-value pairs, where the value can be a string or array
 
             logger.info('[Server] Init the app(Express) with CookieParser ');
-            _app.use(cookieParser(nconf.get('COOKIE_SECRET')));
+            _app.use(cookieParser(nconf.get('APP_COOKIE_SECRET')));
 
 
             logger.info('[Server] Init the app(Express) with validator middleware :', 'expressValidator');
@@ -187,7 +187,7 @@ Server.start = function(cb) {
     return Promise.all([DAL.initConnection(), configServer(), configRoutes()])
         .then(function () {
             // Hold the instance of server
-            Server._server = _app.listen(nconf.get('PORT'));
+            Server._server = _app.listen(nconf.get('APP_PORT'));
 
             Server._server.on('listening', function() {
                 logger.info('[Server] Web server listening on Port', getBindedServerPort());
@@ -223,7 +223,7 @@ Server.start = function(cb) {
 Server.stop = function() {
     const _server = Server._server;
     if (_server && typeof _server.close == 'function') {
-        DB.stopConnection();
+        DAL.stopConnection();
         _server.close();
         logger.warn('[Server] Web server no more listening on Port', getBindedServerPort());
         process.exit();

@@ -71,7 +71,11 @@ const AppsDAO = {
     },
 
     findById :  function (id) {
-        return DB.Apps.findById(id).catch(errorHandler);
+        return DB.Apps.findById(id).then(function(app){
+            if(!app)
+                throw new ApiError.NotFound('This client is not registred.');
+            return app;
+        }).catch(errorHandler);
     },
 
 

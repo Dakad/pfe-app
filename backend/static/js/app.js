@@ -12,8 +12,17 @@ $(function() {
             var txtToCopy = $(this).parent()[0].innerText;
             console.log('To copy :', txtToCopy);
             // Copy the txt into the clipboard
+            /*
+            var made = document.execCommand("copy");
+            if(made)
+                alert('Copied in clipboard - press Ctrl-V to see the content');
+            */
         });
-
+/*
+        $btnCopy.attr("data-toggle","popover")
+        $btnCopy.attr("data-placement","top")
+        $btnCopy.attr("data-content","Copied")
+*/
     $(".to-copy").hover(function() {
         $(this).append($btnCopy); // Add the little btn to make the copy
         $btnCopy.show();
@@ -22,12 +31,32 @@ $(function() {
     });
 
 
-    $('#reset,#delete').click(function() {
+    $('.reset,.delete').click(function() {
         var $btn = $(this),
             $modal = $($btn.data('target'));
 
         $modal.find('.btn-confirm').attr('href', $btn.data("link"));
     });
+
+
+    $('#btnToggleSecret').click(function (e) {
+        var $btn = $(e.target),
+            $wellSecret = $('.well'),
+            start = nb = 7,
+            str = $btn.text();
+        $wellSecret.removeClass('hidden');
+        $btn.removeClass('btn-info').addClass('btn-default disabled');
+        var countDown = setInterval( (() =>  $btn.text(str + ' (' + nb-- + ')')),1000);
+
+        setTimeout(function () {
+            clearInterval(countDown);
+            $btn.removeClass('btn-default disabled').addClass('btn-info');
+            $wellSecret.addClass('hidden');
+            $btn.text(str);
+        }, start * 1000 );
+    });
+
+
 
 
     var inputImg = document.getElementById('appImgLogo');
@@ -42,6 +71,13 @@ $(function() {
     var fileType = document.getElementById('fileType');
     var fileSize = document.getElementById('fileSize');
     var fileSrc = document.getElementById('fileSrc');
+
+
+    if(appChosenLogo.value){
+        previewImg.src = appChosenLogo.value;
+        if (previewImg.complete)
+            drawImage(previewImg);
+    }
 
 
     inputImg.addEventListener("change", function() {
@@ -113,7 +149,11 @@ $(function() {
 
         appChosenLogo.value = canvas.toDataURL('image/jpeg', 0.95);
         console.log(appChosenLogo.value);
-
+    }
+    
+    
+    function resetInitialLogo() {
+        
     }
 
 

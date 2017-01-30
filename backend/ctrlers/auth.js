@@ -66,11 +66,12 @@ const isAuth = function(req, res, next) {
             res.locals.isAuth = true;
             next(null,res.locals.isAuth);
         }).catch(function(err) {
-            res.clearCookies('accessToken');
-            res.clearCookies('isAuth');
+            res.clearCookie('accessToken');
+            res.clearCookie('isAuth');
             req.session = null; // Destroy session
             res.locals.isAuth = false;
             console.error(err);
+            
         });
 
 }
@@ -104,7 +105,7 @@ const logIn = function(req, res, next) {
             email: req.user.email,
             name: req.user.name,
             isAdmin: req.user.isAdmin
-        }, nconf.get('TOKEN_SECRET'));
+        });
     }).then(function(token) { // Call the next middleware
         req.user.token = token;
         next(null,true);

@@ -48,7 +48,7 @@ const dbUrlParseur = function(cb) {
             username : DB_AUTH[0], //env var: DATABASE_USER
             password : DB_AUTH[1], //env var: DATABASE_PASSWORD
             host: DB_URL.hostname, // Server hosting the postgres database
-            port: DB_URL.port, //env var: DATABASE_PORT
+            port: DB_URL.port || 5432, //env var: DATABASE_PORT
             database: DB_URL.pathname.split('/')[1],
             pool : {
               max: 5, //set pool max size to 17
@@ -74,7 +74,7 @@ module.exports = {
                 dconf.load(); // LOAD my .env files into process.env
                 nconf.env(); // LOAD All process into nconf
                 dbUrlParseur();
-                nconf.defaults({ 'PORT': 3030 });
+                nconf.defaults({ 'APP_PORT': 3030 });
                 // If not env. var TOKENT_SECRET, define a new one.
                 nconf.defaults({ 'TOKEN_SECRET': uuidV4() });
                 return fulfill(); // Done, next task on the promise

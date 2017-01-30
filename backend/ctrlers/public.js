@@ -169,14 +169,13 @@ const appHandler = function(req,res,next){
     return renderCtrl.appUpsertPage(req,res);
 }
 
+
 /**
  * Reset the access Token of client
  *
  */
 function resetClientToken(id){
     return AppsDAO.findById(id).then(function(app){
-        if(!app)
-            return new ApiError.NotFound('This client is not registred.');
         return Util.generateSalt().then(function(secret) {
             app.set('secret',secret);
             return [app.get('id'),app.get('secret'),32];
@@ -184,9 +183,10 @@ function resetClientToken(id){
         .then((token) => {
             app.set('accessToken',token);
             return app.save();
-        });
-    })
+        });// Util.generateSalt -> hashPwd -> saveToken
+    }); // AppDAO.FindById
 }
+
 
 
 /**
@@ -397,7 +397,11 @@ const logout = function(req, res) {
 const errorHandler = function(err, req, res, next) {
     if (!err) err = new Error('Not Found - Something went south');
     if (!err.status) err.status = 404;
-
+/*
+    if( err instanceof ApiError.Unauthorized)
+        if(req.path === '/login' || req.path === '/signup' && req.method === 'GET')
+            return res.redirect('/');
+*/
     logger.error(err);
 
     renderCtrl.errorPage(err, res);

@@ -11,7 +11,8 @@ block content
 
     - var attr = {};
     - client = (!client) ? {} : client;
-    - if(client && client.id ) attr.value = client.id;
+    - if(client && client.id ) attr.id ={ value : client.id};
+    - if(client && client.logo ) attr.logo ={ value : client.logo};
 
   // (client ? value=client.id : '')
 
@@ -24,7 +25,7 @@ block content
         .col-lg-10
           .col-lg-6
             span.help-block.text-warning Your upload must not be sized over 200 Kb.
-            input#appChosenLogo(name='appLogo', type="hidden")
+            input#appChosenLogo(name='appLogo', type="hidden")&attributes(attr.logo)
             input#appImgLogo.form-control(type='file',accept="image/jpg,image/jpeg")
             br
             dl#fileDetails.hidden.dl-horizontal
@@ -41,7 +42,7 @@ block content
               |Chosen logo - Amazinly beautifull logo of your app
 
       .form-group
-        input(name='appId', type="hidden")&attributes(attr)
+        input(name='appId', type="hidden")&attributes(attr.id)
       .form-group
         label.col-lg-2.control-label(for="appName") Name
         .col-lg-10
