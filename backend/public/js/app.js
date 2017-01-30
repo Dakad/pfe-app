@@ -30,11 +30,13 @@ $(function() {
     });
 
 
-    var inputImg = document.getElementById('appLogo');
+    var inputImg = document.getElementById('appImgLogo');
+    var accepted = inputImg.getAttribute('accept').split(',');
     var appChosenLogo = document.getElementById('appChosenLogo');
     //var previewImg = document.getElementById('previewLogo');
     var previewImg = new window.Image();
     var file, fileDetails = document.getElementById('fileDetails');
+
     var canvas = document.getElementById('canv');
     var fileName = document.getElementById('fileName');
     var fileType = document.getElementById('fileType');
@@ -43,21 +45,29 @@ $(function() {
 
 
     inputImg.addEventListener("change", function() {
-
+        // Get the chosen file
         file = this.files[0];
-        //previewImg.width = fit.width;
-        //previewImg.height = fit.height;
+        file.humanSize = (file.size / 1024);
+
         previewImg.src = fileSrc.innerHTML = window.URL.createObjectURL(file);
 
+        // [CHECK] Make a limit by size , if > 250 Kb => F#ck o#t
+        if( file.humanSize > 250)
+            return alert('Your logo is oversized (' + file.humanSize.toFixed(2) +') Kb. . The limit is set to 200 Kb.');
+
+        //  [CHECK] Make a limit by type, if not in accept
+        if(accepted.indexOf(file.type)<0)
+            return alert('The logo\'s format is not allowed. Only JPEG');
+
+        // What to do if the img is loaded
         if (previewImg.complete)
             drawImage(previewImg);
         else
-            previewImg.onload = function() {
-                return drawImage(previewImg)
-            };
+            previewImg.onload =  (() => drawImage(previewImg));
 
+        // Add details on the image
         fileDetails.className = 'dl-horizontal'
-        fileSize.innerHTML = /*Math.floor*/ (file.size / 1024).toFixed(3) + ' Kb.';
+        fileSize.innerHTML = /*Math.floor*/ file.humanSize.toFixed(3) + ' Kb.';
         fileType.innerHTML = file.type;
         fileName.innerHTML = file.name;
 
@@ -83,7 +93,12 @@ $(function() {
         };
     }
 
+    /**
+     * description
+     *
+     */
     function drawImage(img) {
+        // img = (typeof img === 'Event') ? this : img;
         var fit = calculateAspectRatioFit({
             maxWidth: 300,
             maxHeight: 250,
@@ -96,7 +111,7 @@ $(function() {
         canvas.height = fit.maxWidth;
         ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
 
-        appChosenLogo.value = canvas.toDataURL();
+        appChosenLogo.value = canvas.toDataURL('image/jpeg', 0.95);
         console.log(appChosenLogo.value);
 
     }

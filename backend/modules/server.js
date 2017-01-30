@@ -44,6 +44,7 @@ const logger = require("./logger");
 
 // Routes
 const apiRoute = require('../routes/api');
+const authRoute = require('../routes/auth');
 const defRoute = require('../routes/public');
 
 
@@ -145,6 +146,10 @@ function configRoutes() {
         _app.use('/api', apiRoute);
         apiRoute.init();
 
+
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/auth/*');
+        _app.use('/auth', authRoute);
+        authRoute.init();
 
 
         logger.info('[Server - Routes] Init the app(Express) with route for : ', '/*', '/public/*');

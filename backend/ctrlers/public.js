@@ -200,32 +200,39 @@ const listClients = function(req, res, next) {
     });
 }
 
+
 /**
- * Get a requested client speified in the URL parameter/query.
+ * Get a requested client specified in the header
+ * or in the URL parameter/query.
  *
  */
 const getClient = function(req,res,next){
-    let appId ;
-    if (req.params.appId) {
-        req.checkParams('appId', 'Invalid name for this app').notEmpty();
+    let clientId;
+    if (req.params.clientId) {
+        req.checkParams('clientId', 'Invalid id for client').notEmpty();
         req.sanitizeParams();
-        appId = req.params.appId;
+        clientId = req.params.clientId;
     }else{ // Req from outside (API)
         if(req.query.client_id){
-            req.checkQuery('client_id', 'Invalid name for this app').notEmpty();
+            req.checkQuery('client_id', 'Invalid id for client').notEmpty();
             req.sanitizeQuery('client_id');
-            appId = req.query.client_id;
+            clientId = req.query.client_id;
+        }else{
+            // Req for /auth && has been retrieve from the headers
+            clientId = (req.from) ? req.from.clientId : clientId;
         }
     }
 
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
-        if (!result.isEmpty()) throw new new ApiError.BadRequest('Invalid data sent.');
-        return AppsDAO.findById(appId);
-    }).then((app) => {
-        if(!app) throw new ApiError.NotFound('Unknown client. Not registred');
-        res.client = app.toJSON();
-        res.client.hasLogo = (app.get('logo') != null);
+        if (!result.isEmpty()) throw new new ApiError.BadRequest('Invalid data sent for client.');
+        return AppsDAO.findById(clientId);
+    }).then((client) => {
+        if(!client) throw new ApiError.NotFound('Unknown client. Not registred');
+        if((req.from)) // Req for /auth && has been retrieve from the headers
+            req.client = client.toJSON();
+        else
+            res.client = client.toJSON();
         next();
     });
 
@@ -278,7 +285,7 @@ const afterLoginChecked = function(req, res) {
 
     res.flash('info', {
         title : 'Welcome back !',
-        msg : 'It\'s goot to see u alive !'
+        msg : 'It\'s groot to see u alive !'
     });
 
     res.redirect('/manage');
@@ -376,7 +383,7 @@ const logout = function(req, res) {
     req.session = null; // Destroy session
     res.locals.isAuth = false;
     res.flash('info', 'You are disconnect !');
-    res.redirect('home');
+    res.redirect('/home');
 }
 
 
@@ -406,7 +413,6 @@ const errorHandler = function(err, req, res, next) {
 
 // Methods
 module.exports = {
-
     loginPosted: checkLoginPosted,
     afterLogin: afterLoginChecked,
 

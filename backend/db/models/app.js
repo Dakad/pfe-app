@@ -48,17 +48,21 @@ const AppsModel = function(sequelize, DataTypes) {
     comment: "Contains the registered client app using the route '/api' ",
     schema: nconf.get('DATABASE_SCHEMA') || 'public',
 
+
     classMethods: {
       associate: function(models) {
-
         Apps.belongsToMany(models.Users, { as: 'consumers', through: models.AuthApps, foreignKey: 'consumer' });
-
         Apps.belongsTo(models.Users, {
           as: 'apps',
           foreignKey: 'owner'
         }); // Apps will keep the FK to Users
 
       }
+    },
+
+
+    instanceMethods: {
+      hasLogo : () => (this.logo != null)
     },
 
     // Hooks are function that are called before and
@@ -68,12 +72,14 @@ const AppsModel = function(sequelize, DataTypes) {
         // First salt to be used as apiId
         return Util.generateSalt().then(function(secret) {
           app.set('secret',secret);
-          return [app.get('id'),app.get('secret'),32];
+          return [app.get('id'), app.get('secret'), app.get('id').length]; // To be hashed
+          // Use id as salt, secret as pwd, decrease the size for easiness
         }).spread(Util.hashPassword)
         .done((token) => app.set('accessToken',token));
       },
 
-      afterFind : function(app) {
+      afterFind : function(client) {
+
       }
 
 

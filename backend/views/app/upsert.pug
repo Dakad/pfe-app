@@ -3,6 +3,12 @@ extends ../layout
 block content
   .row.clearfix
     h1.page-header=title
+      small.pull-right
+        a.btn.btn-info(href='/apps')
+          span.fa.fa-th(aria-hidden="true")
+          |  Back to list
+
+
     - var attr = {};
     - client = (!client) ? {} : client;
     - if(client && client.id ) attr.value = client.id;
@@ -14,11 +20,12 @@ block content
       legend Fill this form with information about your application.
 
       .form-group
-        label.col-lg-2.control-label(for="appLogo") Logo
+        label.col-lg-2.control-label(for="appImgLogo") Logo
         .col-lg-10
           .col-lg-6
+            span.help-block.text-warning Your upload must not be sized over 200 Kb.
             input#appChosenLogo(name='appLogo', type="hidden")
-            input#appLogo.form-control(type='file',accept="image/jpg,image/jpeg")
+            input#appImgLogo.form-control(type='file',accept="image/jpg,image/jpeg")
             br
             dl#fileDetails.hidden.dl-horizontal
               dt File :
@@ -30,10 +37,8 @@ block content
               dt URL temp. :
               dd#fileSrc
           .col-lg-4.col-lg-offset-2
-            canvas.hidden#canv(width=250 height=200)
-            // span.help-block#canDesc Chosen logo - Amazinly beautifull logo of your app
-
-
+            canvas.hidden#canv
+              |Chosen logo - Amazinly beautifull logo of your app
 
       .form-group
         input(name='appId', type="hidden")&attributes(attr)
@@ -69,7 +74,7 @@ block content
                 value=client.redirectUri || ''
                 placeholder="Callback Redirection URL")
 
-          span.help-block The url to be callback by the oAuth Server for your token
+          span.help-block The url to be callback for your access token
           .checkbox
             label
               input(type="checkbox", checked="true",name="appUseUriAsDefault",value=client.useRedirectUri || "true")
@@ -86,4 +91,3 @@ block content
       .form-group
         .col-lg-10.col-lg-offset-2
           button.btn.btn-success.btn(type="submit")=(client ? 'Save' : 'Register')
-

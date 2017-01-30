@@ -112,16 +112,16 @@ router.get(['/exe', '/training'], renderCtrl.trainingPage);
 router.get(['/doc', '/documentation'], renderCtrl.docPage);
 
 /* GET registred Apps page. */
-router.param('appId', publicCtrl.getClient);
+router.param('clientId', publicCtrl.getClient);
 router.get(['/apps', '/manage'],
         authCtrl.isLogged, publicCtrl.listClients, renderCtrl.appListPage)
 
-router.get('/apps/:appId',
+router.get('/apps/:clientId',
         authCtrl.isLogged, publicCtrl.getClient, renderCtrl.appListPage)
 
 
 // POST new app - DELETE
-router.route('/app/(:appId)?')
+router.route('/app/(:clientId)?')
         .all(authCtrl.isLogged)
         .get(publicCtrl.appHandler) // Get the page to add new app
         .post(publicCtrl.upsertApp) // Adding or editing new app

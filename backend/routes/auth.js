@@ -50,24 +50,26 @@ const router = express.Router();
 
 
 
-router.init = function() {
-    router.use(cookieParser(nconf.get('COOKIE_SECRET')));
 
-}
+router.init = function() {};
 
+
+router.use(authCtrl.retrieveClientInfo);
 
 
 // Post token.
+ // route : POST ..../auth/token
 router.post('/token', authCtrl.token);
 
-
+// Called during the /grant to log the user.
 router.route('/grant/user')
-    .post([publicCtrl.loginPosted,authCtrl.logMe, publicCtrl.afterLoggedForGrant])
+    .post([publicCtrl.loginPosted,authCtrl.logMe/*, publicCtrl.afterLoggedForGrant*/])
 
 // Grant acces to this client.
+ // route : ..../auth/grant?client_id=***&state=****&redirect_uri=****
 router.route('/grant')
-    .get(publicCtrl.getApp, authCtrl.isLogged, authCtrl.dialogPage)
-    .post(publicCtrl.getApp, authCtrl.isLogged, authCtrl.grant)
+    .get(publicCtrl.getClient, authCtrl.isLogged, authCtrl.dialogPage)
+    .post(publicCtrl.getClient, authCtrl.isLogged, authCtrl.grant)
 
 
 

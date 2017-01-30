@@ -3,15 +3,15 @@ include ../_mixins
 
 #navbar-main.navbar-collapse.collapse
   ul.nav.navbar-nav
-    +navLink('About','/public/about')
-    +navLink('Doc','/public/doc')
-    +navLink('Training','/public/training')
+    +navLink('About','/public/about','address-card-o')
+    +navLink('Doc','/public/doc','book')
+    +navLink('Training','/public/training','inbox')
 
 
   ul.nav.navbar-nav.navbar-right
     if isAuth
-      +navLink('APP Box','/public/apps')
-      +navLink('Logout','/public/logout')
+      +navLink('APP Box','/public/apps','th-large')
+      +navLink('Logout','/public/logout','sign-out')
     else
       +navLink('Sign up','/public/signup')
       +navLink('Login','/public/login')

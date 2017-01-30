@@ -75,10 +75,16 @@ const AppsDAO = {
     },
 
 
-    checkIfAuth : function (id,secret) {
+    checkIfRegistred : function (client) {
         return DB.Apps.findOne({
-            where : {id : id, secret : secret}
-        }).catch(errorHandler);
+            exclude : ['logo','description','type'],
+            where : {
+                id : client.id || client.clientId,
+                secret : client.secret || client.clientSecret
+            }
+        }).then(function(dbClient){
+            return (dbClient) ? dbClient : new ApiError.NotFound('This client is not registred. Unknown id or secret!');
+        });
     }
 
 
