@@ -153,7 +153,7 @@ const signUp = function(req, res, next) {
  *
  */
 const retrieveClientInfo = function (req,res,next)  {
-    const retrieveFrom = function(source) {
+    const retrieveFrom = (source) => {
         const infos = {};
         let info = source['clientId'];
 
@@ -173,6 +173,10 @@ const retrieveClientInfo = function (req,res,next)  {
 
         return infos;
     }
+
+    res.locals.query =  '?'+Object.keys(req.query).reduce((p,q,i) => {
+        return (q +'='+ req.query[q] + ((p) ? '&'+p :''));
+    },'');
 
     if(req.method === 'POST') // If the client want something, set in the headers OR body ,not both
         req.from = (req.get('clientId')) ? retrieveFrom(req.headers) : retrieveFrom(req.body);
@@ -228,6 +232,8 @@ const getApiToken = function (req,res) {
         url += (req.client.state) ? '&state='+res.client.state : '';
         res.redirect(url); // Send back the token
     }).catch((err) => {
+        // @TODO REplace by a fct which do that
+        res.status(err.status || 500).json(err.message || 'Some error occured, better formatin coming  !');
 
         debugger;
     });
@@ -254,9 +260,6 @@ const checkApiToken = function(req, res, next) {
  * Show the page to allow the user to grant a client.
  */
 const dialogPage = function (req,res) {
-    res.locals.query =  '?'+Object.keys(req.query).reduce((p,q,i) => {
-        return (q +'='+ req.query[q] + ((p) ? '&'+p :''));
-    },'');
 
     if(req.method === 'GET' && req.path === '/grant'){
         res.client.accessToken = undefined;
