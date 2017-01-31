@@ -71,7 +71,7 @@ const isAuth = function(req, res, next) {
             req.session = null; // Destroy session
             res.locals.isAuth = false;
             console.error(err);
-            
+
         });
 
 }
@@ -147,8 +147,9 @@ const signUp = function(req, res, next) {
 
 
 /**
- * Middleware to dig into the request headers or body to
- * retrieve the infos sent by the client.
+ * Middleware to dig into the request headers or body
+ * when the method is POST and url /token
+ * to retrieve the infos sent by the client.
  *
  */
 const retrieveClientInfo = function (req,res,next)  {
@@ -159,27 +160,27 @@ const retrieveClientInfo = function (req,res,next)  {
         // Check if at least, the clientId && clientSecret are inside
 
         if(!info)
-            throw new ApiError.BadRequest('Missing the clientId for the authentication');
-        else
-            infos['clientId'] = info.trim();
+            return new ApiError.BadRequest('Missing the clientId for the authentication');
+        infos['clientId'] = info.trim();
 
         if(!(info = source['clientSecret']))
-            throw new ApiError.BadRequest('Missing the clientSecret for the authentication');
-        else
-            infos['clientSecret'] = info.trim();
+            return new ApiError.BadRequest('Missing the clientSecret for the authentication');
+        infos['clientSecret'] = info.trim();
 
-        info = source['state']
-        if(info) infos['state'] = info.trim();
+        if(info = source['state']) infos['state'] = info.trim();
 
-        info = source['redirectUri']
-        if(info) infos['redirectUri'] = info.trim();
+        if(info = source['redirectUri']) infos['redirectUri'] = info.trim();
 
         return infos;
     }
 
-    req.from = (req.method === 'POST') ? retrieveFrom(req.body) : retrieveFrom(req.headers);
+    if(req.method === 'POST') // If the client want something, set in the headers OR body ,not both
+        req.from = (req.get('clientId')) ? retrieveFrom(req.headers) : retrieveFrom(req.body);
 
-    next();
+    if(req.from.type && req.from.type === 'ApiError')
+        next(req.from);
+    else
+        next();
 }
 
 
@@ -199,7 +200,6 @@ const getApiToken = function (req,res) {
 
     // Go fetch the requested & registred client
     AppsDAO.checkIfRegistred(req.from).then((client) =>{
-        debugger;
         return [
             client,
             Util.validPassword(
@@ -211,21 +211,22 @@ const getApiToken = function (req,res) {
     }).spread((client,isValid) => {
         if(!isValid)
             throw new ApiError.Unauthorized('This client is not registred. Unknown id or secret!');
-        client.accessToken = undefined;
+        client.accessToken = client.secret = undefined;
         client = client.toJSON();
         client.state = req.from.state;
         if (client.useRedirectUri === false && req.from.redirectUri)
             client.redirectUri = req.from.redirectUri;
-        req.client = client;
+        res.client = client;
         return Util.generateToken({
             id: client.id,
             name: client.name,
             scope : client.scope
-        }, nconf.get('TOKEN_SECRET'));
+        });
     }).then((token) => {
-        const url = req.client.redirectUri+token;
-        url += (req.client.state) ? '&state='+req.client.state : '';
-        res.send(url);
+        let url = res.client.redirectUri+token;
+        url += '&clientId='+res.client.id;
+        url += (req.client.state) ? '&state='+res.client.state : '';
+        res.redirect(url); // Send back the token
     }).catch((err) => {
 
         debugger;
@@ -256,7 +257,18 @@ const dialogPage = function (req,res) {
     res.locals.query =  '?'+Object.keys(req.query).reduce((p,q,i) => {
         return (q +'='+ req.query[q] + ((p) ? '&'+p :''));
     },'');
-    return renderCtrl.dialogPage(req,res);
+
+    if(req.method === 'GET' && req.path === '/grant'){
+        res.client.accessToken = undefined;
+        return renderCtrl.dialogPage(req,res);
+    }
+
+    return res.redirect('/auth/grant'+res.locals.query);
+}
+
+
+const afterLoggedForGrant = function(req,res){
+    //res.redirect('/auth/grant');
 }
 
 /**
@@ -264,8 +276,9 @@ const dialogPage = function (req,res) {
  */
 const grantApp = function (req,res,next) {
     console.log(req.body);
+    debugger
     if(req.body.choice === 'yes')
-        next();
+        DB.App
 
 };
 
@@ -274,12 +287,14 @@ const grantApp = function (req,res,next) {
  * Error Handler
  */
 const errorHandler = function(err, req, res, next) {
-    if(req.path === '/grant')
+        // An error occured while
+       if(req.method === 'GET' && req.path === '/grant' && err.status === 401 ) // An error occured while gather info about the client for display
         return dialogPage(req,res);
 
-
-
-    debugger;
+    // Create method to send only json for the errors
+    // Send th err as json {status,err{status,message}
+    res.status(err.status || 500).send(err.message || 'Some error occured, better formatin coming  !');
+    //renderCtrl.errorPage(err,req,res);
 };
 
 
@@ -292,13 +307,6 @@ const errorHandler = function(err, req, res, next) {
  * Exports
  */
 
-// Variables
-module.exports = {
-
-}
-
-
-// Methods
 
 // Export for /public auth
 module.exports = {
@@ -316,14 +324,14 @@ module.exports = {
 
     dialogPage : dialogPage,
 
-    //afterLoggedForGrant : afterLogged,
+    afterLoggedForGrant : afterLoggedForGrant,
 
     grant   : grantApp,
 
     retrieveClientInfo : retrieveClientInfo,
 
 
-    token   : getApiToken
+    getApiToken   : getApiToken
 
 
 

@@ -207,34 +207,27 @@ const listClients = function(req, res, next) {
  *
  */
 const getClient = function(req,res,next){
-    let clientId;
+    let clientId = (req.from) ? req.from.clientId : undefined;
     if (req.params.clientId) {
         req.checkParams('clientId', 'Invalid id for client').notEmpty();
         req.sanitizeParams();
         clientId = req.params.clientId;
     }else{ // Req from outside (API)
-        if(req.query.client_id){
-            req.checkQuery('client_id', 'Invalid id for client').notEmpty();
-            req.sanitizeQuery('client_id');
-            clientId = req.query.client_id;
-        }else{
-            // Req for /auth && has been retrieve from the headers
-            clientId = (req.from) ? req.from.clientId : clientId;
+        if(!req.from){
+            req.checkQuery('clientId', 'Invalid id for client').notEmpty();
+            req.sanitizeQuery('clientId');
         }
-    }
-
+        // Req for /auth && has been retrieve from the headers
+        clientId = (!req.from) ? req.query.clientId : req.from.clientId;
+}
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
-        if (!result.isEmpty()) throw new new ApiError.BadRequest('Invalid data sent for client.');
+        if (!result.isEmpty()) throw new ApiError.BadRequest('Invalid data sent for client.');
         return AppsDAO.findById(clientId);
     }).then((client) => {
-        if(!client) throw new ApiError.NotFound('Unknown client. Not registred');
-        if((req.from)) // Req for /auth && has been retrieve from the headers
-            req.client = client.toJSON();
-        else
-            res.client = client.toJSON();
+        res.client = client.toJSON();
         next();
-    });
+    }).catch((err) => errorHandler(err,req,res,next));
 
 }
 
@@ -268,7 +261,7 @@ const checkLoginPosted = function(req, res, next) {
 /**
  * What to do after a successful login.
  */
-const afterLoginChecked = function(req, res) {
+const afterLoginChecked = function(req, res,next) {
     // By default, the cookie expires when the browser is closed.
     let cookieOpts = DEFAULT_COOKIE_OPTIONS;
 
@@ -283,12 +276,15 @@ const afterLoginChecked = function(req, res) {
     res.cookie('accessToken', req.user.token, cookieOpts);
     res.cookie('isAuth', true, cookieOpts);
 
-    res.flash('info', {
-        title : 'Welcome back !',
-        msg : 'It\'s groot to see u alive !'
-    });
+    if (!next) {
+        res.flash('info', {
+            title: 'Welcome back !',
+            msg: 'It\'s groot to see u alive !'
+        });
 
-    res.redirect('/manage');
+        return res.redirect('/manage');
+    }
+    next();
 };
 
 
@@ -360,7 +356,7 @@ const upsertApp = function(req, res, next) {
         }
         if(isEditing){ // req for editing an client
             client.update(nApp.get({plain: true}));
-            res.flash('success','All odification made saved');
+            res.flash('success','All modifications made are saved');
         }else{
             res.flash('success', client.name +' is registred');
         }
@@ -397,11 +393,11 @@ const logout = function(req, res) {
 const errorHandler = function(err, req, res, next) {
     if (!err) err = new Error('Not Found - Something went south');
     if (!err.status) err.status = 404;
-/*
+
     if( err instanceof ApiError.Unauthorized)
         if(req.path === '/login' || req.path === '/signup' && req.method === 'GET')
             return res.redirect('/');
-*/
+
     logger.error(err);
 
     renderCtrl.errorPage(err, res);

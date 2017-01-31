@@ -59,11 +59,11 @@ router.use(authCtrl.retrieveClientInfo);
 
 // Post token.
  // route : POST ..../auth/token
-router.post('/token', authCtrl.token);
+router.post('/token', authCtrl.getApiToken);
 
 // Called during the /grant to log the user.
 router.route('/grant/user')
-    .post([publicCtrl.loginPosted,authCtrl.logMe/*, publicCtrl.afterLoggedForGrant*/])
+    .post([publicCtrl.loginPosted,authCtrl.logMe, publicCtrl.afterLogin, authCtrl.dialogPage])
 
 // Grant acces to this client.
  // route : ..../auth/grant?client_id=***&state=****&redirect_uri=****

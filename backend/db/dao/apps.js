@@ -75,13 +75,13 @@ const AppsDAO = {
             if(!app)
                 throw new ApiError.NotFound('This client is not registred.');
             return app;
-        }).catch(errorHandler);
+        });
     },
 
 
     checkIfRegistred : function (client) {
         return DB.Apps.findOne({
-            exclude : ['logo','description','type'],
+            attributes :{exclude : ['logo','description','type']},
             where : {
                 id : client.id || client.clientId,
                 secret : client.secret || client.clientSecret

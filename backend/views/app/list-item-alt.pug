@@ -17,13 +17,16 @@
           )=client.name
 
       h3 Redirect URI &nbsp;
-        | #[code.to-copy(style="word-break: break-all")=client.redirectUri]
+      pre.to-copy(style="word-break:break-all; overflow:hidden;")=client.redirectUri
       br
       p(style="width: 20em; overflow:hidden;text-overflow: ellipsis;white-space:nowrap;")=client.description
 
       p
-        button.btn.btn-info.btn-block#btnToggleSecret Click to display your secret key
-        .well.well-sm.to-copy.hidden(style="word-break: break-all;color:red;border: 2px solid red")=client.secret
+        button.btn.btn-info.btn-block.hidden#btnToggleSecret Click to display your secret key
+        .well.well-sm.to-copy(
+          style="word-break: break-all;color:#6B1119;border: 2px dashed #c7254e",
+          title="CONFIDENTIAL - Your secret"
+        )=client.secret
       hr
 
       p

@@ -56,6 +56,7 @@ const renderSignupPage = function(req, res) {
 };
 renderSignupPage.unless = unless;
 
+
 const renderDocPage = function(req, res) {
     res.render('doc', {
         title: 'API Documentation',
@@ -93,8 +94,9 @@ const renderAppUpsertPage = function(req, res) {
 
 const renderDialogPage = function (req,res,next){
     return res.render('dialog',{
-       client : res.client || req.client ,
-       user   : req.user
+        title : 'Grant access to ' + res.client.name,
+        client : res.client ,
+        user   : req.user
     });
 }
 
@@ -106,7 +108,7 @@ const renderErrorPage = function(err, res, next) {
     res.locals.msg = err.message;
     res.locals.status = err.status;
     res.locals.title = err.title || 'Error'
-    res.status(err.status || 500).render('error');
+    return res.status(err.status || 500).render('error');
 };
 
 
