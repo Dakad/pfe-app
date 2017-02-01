@@ -102,7 +102,9 @@ Util.hashPassword = function(pwd, salt, length) {
 Util.validPassword = function(pwd, salt, hashPassword, length) {
     length = (!length) ? 64 : length;
     return new Promise(function(fulfill) {
-        return fulfill(_.isEqual(hashPassword, crypto.pbkdf2Sync(pwd, salt, 1000, length).toString('hex')));
+        Util.hashPassword(pwd, salt,length).then(function(hash){
+            return fulfill(_.isEqual(hashPassword, hash));
+        })
     });
 }
 

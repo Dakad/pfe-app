@@ -178,7 +178,7 @@ function resetClientToken(id){
     return AppsDAO.findById(id).then(function(app){
         return Util.generateSalt().then(function(secret) {
             app.set('secret',secret);
-            return [app.get('id'),app.get('secret'),32];
+            return [app.get('id'),app.get('secret'),app.get('id').length];
         }).spread(Util.hashPassword)
         .then((token) => {
             app.set('accessToken',token);

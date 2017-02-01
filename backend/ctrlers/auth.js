@@ -203,7 +203,8 @@ const getApiToken = function (req,res) {
     console.log(req.from);
 
     // Go fetch the requested & registred client
-    AppsDAO.checkIfRegistred(req.from).then((client) =>{
+    AppsDAO.checkIfRegistred(req.from)
+    .then((client) =>{
         return [
             client,
             Util.validPassword(
@@ -229,7 +230,7 @@ const getApiToken = function (req,res) {
     }).then((token) => {
         let url = res.client.redirectUri+token;
         url += '&clientId='+res.client.id;
-        url += (req.client.state) ? '&state='+res.client.state : '';
+        url += (res.client.state) ? '&state='+res.client.state : '';
         res.redirect(url); // Send back the token
     }).catch((err) => {
         // @TODO REplace by a fct which do that

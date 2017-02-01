@@ -87,6 +87,8 @@ const AppsDAO = {
                 secret : client.secret || client.clientSecret
             }
         }).then(function(dbClient){
+            if (!dbClient) 
+            throw new ApiError.NotFound('This client is not registred. Unknown id or secret!');
             return (dbClient) ? dbClient : new ApiError.NotFound('This client is not registred. Unknown id or secret!');
         });
     }
