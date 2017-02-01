@@ -158,6 +158,10 @@ publicCtrler.inject = function inject (opts) {
         throw new InjectError('all dependencies', 'publicCtrler.inject()');
     }
 
+    if(!opts.logger) {
+        throw new InjectError('logger', 'publicCtrler.inject()');
+    }
+
     if(!opts.dal) {
         throw new InjectError('dal', 'publicCtrler.inject()');
     }
@@ -181,7 +185,8 @@ publicCtrler.inject = function inject (opts) {
     DB = _dependencies.dal;
     UsersDAO = _dependencies.daos.users;
     AppsDAO = _dependencies.daos.apps;
-
+    renderCtrl = _dependencies.ctrlers.render;
+    logger = _dependencies.logger;
 };
 
 
@@ -197,6 +202,10 @@ publicCtrler.inject = function inject (opts) {
  *
  */
 publicCtrler.appHandler = function appHandler(req, res) {
+    if(!req.user){
+        req.flash('warning', 'Identify yourself first !');
+        return res.redirect('/login');
+    }
     switch (req.query.action) {
         case 'edit':
             res.title = 'Edit ' + res.client.name;
@@ -205,12 +214,12 @@ publicCtrler.appHandler = function appHandler(req, res) {
         case 'reset': // Reset the client accessToken
             return resetClientToken(res.client.id).then(() => {
                 res.flash('success', 'Token reset for ' + res.client.name);
-                return res.redirect('/apps');
+                return res.redirect('/manage/apps');
             });
         case 'delete': // Reset this shitapp
             return AppsDAO.delete(res.client.id).then(() => {
                 res.flash('warning', res.client.name + ' have been removed !');
-                return res.redirect('/apps');
+                return res.redirect('/manage/apps');
             });
         case 'export':
 
@@ -248,6 +257,10 @@ function resetClientToken(id) {
  *
  */
 publicCtrler.listClients = function listClients(req, res, next) {
+    if(!req.user){
+        req.flash('warning', 'Identify yourself first !');
+        return res.redirect('/login');
+    }
     AppsDAO.getUsersApps(req.user.id).then(function(apps) {
         res.apps = apps;
         next();
@@ -262,6 +275,7 @@ publicCtrler.listClients = function listClients(req, res, next) {
  */
 publicCtrler.getClient = function getClient(req, res, next) {
     let clientId = (req.from) ? req.from.clientId : undefined;
+    let loggedUser;
     if (req.params.clientId) {
         req.checkParams('clientId', 'Invalid id for client').notEmpty();
         req.sanitizeParams();
@@ -274,10 +288,11 @@ publicCtrler.getClient = function getClient(req, res, next) {
         // Req for /auth && has been retrieve from the headers
         clientId = (!req.from) ? req.query.clientId : req.from.clientId;
     }
+    loggedUser = (req.user ) ? req.user.id : undefined ;
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
         if (!result.isEmpty()) throw new ApiError.BadRequest('Invalid data sent for client.');
-        return AppsDAO.findById(clientId);
+        return AppsDAO.findById(clientId,loggedUser);
     }).then((client) => {
         res.client = client.toJSON();
         next();
@@ -330,13 +345,13 @@ publicCtrler.afterLogin = function afterLoginChecked(req, res, next) {
     res.cookie('accessToken', req.user.token, cookieOpts);
     res.cookie('isAuth', true, cookieOpts);
 
-    if (!next) {
+    if (req.path === '/login') {
         res.flash('info', {
             title: 'Welcome back !',
             msg: 'It\'s groot to see u alive !'
         });
 
-        return res.redirect('/manage');
+        return res.redirect('/manage/');
     }
     next();
 };
@@ -417,7 +432,7 @@ publicCtrler.upsertApp = function upsertApp(req, res, next) {
         else {
             res.flash('success', client.name + ' is registred');
         }
-        return res.redirect('/apps');
+        return res.redirect('/manage/apps');
     }).catch(function(err) {
         console.log(err);
     });

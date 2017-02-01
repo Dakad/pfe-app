@@ -10,7 +10,7 @@ include ../_mixins
 
   ul.nav.navbar-nav.navbar-right
     if isAuth
-      +navLink('APP Box','/public/apps','th-large')
+      +navLink('APP Box','/manage/apps','th-large')
       +navLink('Logout','/public/logout','sign-out')
     else
       +navLink('Sign up','/public/signup')

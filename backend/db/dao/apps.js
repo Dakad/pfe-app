@@ -103,10 +103,13 @@ const AppsDAO = {
         }).catch(errorHandler);
     },
 
-    findById :  function (id) {
+    findById :  function (id,loggedUser) {
         return DB.Apps.findById(id).then(function(app){
             if(!app)
                 throw new ApiError.NotFound('This client is not registred.');
+            if( loggedUser &&app.owner !== loggedUser)
+                throw new ApiError.Forbidden('You are not the owner of this appp.');
+
             return app;
         });
     },

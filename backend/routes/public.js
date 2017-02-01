@@ -39,6 +39,15 @@ const cookieParser  = require('cookie-parser')
 
 // Custom - Mine
 const InjectError = require('../modules/di-inject-error');
+
+
+/**
+ * Variables
+ *
+ */
+ var manageSubRoute = express.Router();
+
+ //Injected
 let _dependencies = {};
 
 
@@ -115,6 +124,8 @@ router.init = function init (){
 
 
 
+
+
     /* GET home page. */
     router.get(['/', '/home'], _dependencies.ctrlers.render.homePage);
 
@@ -153,26 +164,38 @@ router.init = function init (){
     /* GET documentation page. */
     router.get(['/doc', '/documentation'], _dependencies.ctrlers.render.docPage);
 
+
+
+
+
     /* GET registred Apps page. */
-    router.param('clientId', _dependencies.ctrlers.public.getClient);
-    router.get(['/apps', '/manage'],
-            _dependencies.ctrlers.auth.isLogged,
+
+
+    router.use('/manage',manageSubRoute);
+    // Must be logged to see this page
+    manageSubRoute.use(_dependencies.ctrlers.auth.isLogged);
+
+    manageSubRoute.param('clientId',_dependencies.ctrlers.public.getClient);
+    manageSubRoute.get(['/', '/apps'],
             _dependencies.ctrlers.public.listClients,
             _dependencies.ctrlers.render.appListPage
     );
 
-    router.get('/apps/:clientId',
-            _dependencies.ctrlers.auth.isLogged,
+    manageSubRoute.get('/apps/:clientId',
             _dependencies.ctrlers.public.getClient,
             _dependencies.ctrlers.render.appListPage
     );
 
 
     // POST new app - DELETE
-    router.route('/app/(:clientId)?')
-            .all(_dependencies.ctrlers.auth.isLogged)
-            .get(_dependencies.ctrlers.public.appHandler) // Get the page to add new app
-            .post(_dependencies.ctrlers.public.upsertApp); // Adding or editing new app
+    manageSubRoute.route('/app/(:clientId)?')
+            .get([
+                _dependencies.ctrlers.public.appHandler
+            ]) // Get the page to add new app
+            .post([
+                _dependencies.ctrlers.public.upsertApp
+            ]); // Adding or editing new app
+
 
 
 

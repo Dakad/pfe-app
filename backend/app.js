@@ -50,7 +50,7 @@ const publicCtrler = require('./ctrlers/public');
 const renderCtrler = require('./ctrlers/render');
 
 
-
+// Used as DI Container
 const _dependencies = {
   logger: Logger,
   routes: {
@@ -121,10 +121,13 @@ Config.load(_dependencies.logger)
   .then(() => Server.configRoutes(_dependencies))
   .then(Server.start)
   .then(() => Logger.info('[App] Application ready !!!'))
-  .catch(function (err) {
+  .catch(function(err) {
     Logger.error(err);
     Server.stop();
   });
+
+
+
 
 
 // If ctrl+c

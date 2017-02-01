@@ -44,7 +44,7 @@ const ApiError = require('../modules/api-error');
  * Variables
  *
  */
-const UserCtrler = {};
+const authCtrler = {};
  // Injected
 let _dependencies = {};
 let DB;
@@ -54,7 +54,7 @@ let AppsDAO;
 
 
 
-UserCtrler.inject = function inject (opts) {
+authCtrler.inject = function inject (opts) {
 
     if(!opts){
         throw new InjectError('all dependencies', 'authCtrler.inject()');
@@ -101,7 +101,7 @@ UserCtrler.inject = function inject (opts) {
  * Check if this public requested made by user is auth before
  *
  */
-UserCtrler.isLogged = function isAuth (req, res, next) {
+authCtrler.isLogged = function isAuth (req, res, next) {
     const cookies = req.signedCookies;
     // If not, check if req.headers || req.body contains a token
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
@@ -111,25 +111,24 @@ UserCtrler.isLogged = function isAuth (req, res, next) {
         .then(function(decodedToken) {
             req.user = decodedToken;
             res.locals.isAuth = true;
-            next(null,res.locals.isAuth);
+            next();
         }).catch(function(err) {
             res.clearCookie('accessToken');
             res.clearCookie('isAuth');
             req.session = null; // Destroy session
             res.locals.isAuth = false;
             console.error(err);
-
         });
 
 }
-UserCtrler.isLogged.unless = unless;
+authCtrler.isLogged.unless = unless;
 
 
 /**
  * Handle the login on the public
  *
  */
-UserCtrler.logMe = function logIn (req, res, next) {
+authCtrler.logMe = function logIn (req, res, next) {
     const user = req.body;
     // Validate the input from the user
     Util.validInput(user).then(function() {
@@ -168,7 +167,7 @@ UserCtrler.logMe = function logIn (req, res, next) {
  * Handle the signup on the public
  *
  */
-UserCtrler.registerMe = function signUp (req, res, next) {
+authCtrler.registerMe = function signUp (req, res, next) {
     // Validate the input from the req.body
     Util.validInput(req.body).then(function() {
         // Sanitize & clear the input
@@ -199,7 +198,7 @@ UserCtrler.registerMe = function signUp (req, res, next) {
  * to retrieve the infos sent by the client.
  *
  */
-UserCtrler.retrieveClientInfo = function digIntoHeadersOrBody (req,res,next)  {
+authCtrler.retrieveClientInfo = function digIntoHeadersOrBody (req,res,next)  {
     const retrieveFrom = (source) => {
         const infos = {};
         let info = source['clientId'];
@@ -246,7 +245,7 @@ UserCtrler.retrieveClientInfo = function digIntoHeadersOrBody (req,res,next)  {
  * Otherwise, don't talk to him, just shO0ot him with a APIError
  *
  */
-UserCtrler.getApiToken = function createApiToken (req,res) {
+authCtrler.getApiToken = function createApiToken (req,res) {
     // Go fetch the requested & registred client
     AppsDAO.checkIfRegistred(req.from)
     .then((client) =>{
@@ -294,7 +293,7 @@ UserCtrler.getApiToken = function createApiToken (req,res) {
  * Otherwise, don't talk to him, just shO0ot him with a APIError
  *
  */
-UserCtrler.authorize = function checkApiToken (req, res, next) {
+authCtrler.authorize = function checkApiToken (req, res, next) {
     // Check if token && token is mine
     // If ok, next(true)
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
@@ -305,25 +304,25 @@ UserCtrler.authorize = function checkApiToken (req, res, next) {
 /**
  * Show the page to allow the user to grant a client.
  */
-UserCtrler.dialogPage = function dialogPage (req,res) {
+authCtrler.dialogPage = function dialogPage (req,res) {
 
     if(req.method === 'GET' && req.path === '/grant'){
         res.client.accessToken = undefined;
-        return renderCtrl.dialogPage(req,res);
+        return _dependencies.ctrlers.render.dialogPage(req,res);
     }
 
     return res.redirect('/auth/grant'+res.locals.query);
 }
 
 
-UserCtrler.afterLoggedForGrant = function afterLoggedForGrant (req,res){
+authCtrler.afterLoggedForGrant = function afterLoggedForGrant (req,res){
     //res.redirect('/auth/grant');
 }
 
 /**
  * The user allowed the client to gain acces to his data.
  */
-UserCtrler.grant = function grantApp (req,res,next) {
+authCtrler.grant = function grantApp (req,res,next) {
     console.log(req.body);
     debugger
     // if(req.body.choice === 'yes')
@@ -334,10 +333,10 @@ UserCtrler.grant = function grantApp (req,res,next) {
 /**
  * Error Handler
  */
-UserCtrler.errorHandler = function errorHandler (err, req, res, next) {
+authCtrler.errorHandler = function errorHandler (err, req, res, next) {
         // An error occured while
        if(req.method === 'GET' && req.path === '/grant' && err.status === 401 ) // An error occured while gather info about the client for display
-        return UserCtrler.dialogPage(req,res);
+        return authCtrler.dialogPage(req,res);
 
     // Create method to send only json for the errors
     // Send th err as json {status,err{status,message}
@@ -357,4 +356,4 @@ UserCtrler.errorHandler = function errorHandler (err, req, res, next) {
 
 
 // Export for /public auth
-module.exports = UserCtrler;
+module.exports = authCtrler;
