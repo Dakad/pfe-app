@@ -101,6 +101,7 @@ router.init = function init (){
         res.locals.currentUrl = req.path;
         res.locals.input = req.body; // Get the inputted form
         res.locals.flashMsg = req.cookies.flashMsg; // Get saved flashMsg
+        res.locals.isAuth = req.signedCookies.isAuth; // Check if auth
         res.clearCookie('flashMsg'); // Delete the saved msg;
 
         // To save flash msg into cookies for the next call.
