@@ -1,8 +1,17 @@
 'use strict';
 
 
+/**
+ * Load modules dependencies.
+ */
+// Built-in
+
+
+// Npm
 const SimpleError = require('simple-error');
 
+
+// Mine
 const jsonApiResponse = require("../static/api-response-status.json");
 
 

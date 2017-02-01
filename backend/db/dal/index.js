@@ -28,16 +28,53 @@
 const fs = require('fs');
 const path = require('path');
 const nconf = require('nconf');
+
+//npm
+const _ = require('lodash');
 const Sequelize = require('sequelize');
-const basename = path.basename(module.filename);
 
 // Custom - Mine
-const logger = require('../../modules/logger');
+const InjectError = require('../../modules/di-inject-error');
+
+
+
+/**
+ * Variables
+ *
+ */
+const basename = path.basename(module.filename);
 const DB = {
     Sequelize: Sequelize
 };
-
+// Injected
+let _dependencies = {};
 const pathToModel = path.join(__dirname,'..','models');
+
+
+
+
+
+/**
+ * Used for the D.I, receive all dependencies via opts
+ * Will throw an InjectError if missing a required dependenccy
+ * @parameter   {Object}    opts    Contains all dependencies needed by ths modules
+ *
+ */
+DB.inject = function inject (opts) {
+
+    if(!opts){
+        throw new InjectError('all dependencies', 'renderCtrler.inject()');
+    }
+
+    if (!opts.logger) {
+        throw new InjectError('logger', 'Server.configServer()');
+    }
+
+
+    // Clone the options into my own _dependencies
+    _dependencies = _.assign(_dependencies,opts);
+
+};
 
 
 
@@ -71,7 +108,7 @@ function initSequelize() {
 const connect = function() {
     return initSequelize().then(function(){
             const nbPool = nconf.get('DB_CONFIG').pool.min + ' - ' + nconf.get('DB_CONFIG').pool.max;
-            logger.info('[DB] Init the DB with the pool : Client  Min - MAX. ', nbPool);
+            _dependencies.logger.info('[DB] Init the DB with the pool : Client  Min - MAX. ', nbPool);
             return  DB.sequelize.authenticate();
         }).then(() => DB.sequelize.showAllSchemas({logging:false}))
         .then(function(schemas){
@@ -82,7 +119,7 @@ const connect = function() {
         // .then(function() {DB.sequelize.sync({force:true})}) // DROP TABLES before CREATE
         .then(function() {
             const urlDB = nconf.get('DATABASE_USER') +'@'+nconf.get('DATABASE_SERVER')+  '~'+nconf.get('DATABASE_NAME');
-            logger.info('[DB] Connection has been established successfully to :',urlDB);
+            _dependencies.logger.info('[DB] Connection has been established successfully to :',urlDB);
         }).catch(function(err) {
             throw new Error('[DB] Unable to connect to the DB - ' + err.message);
         });
@@ -93,7 +130,7 @@ const connect = function() {
 
 DB.stopConnection = function() {
     DB.sequelize.close();
-    logger.warn('[DB] All connections to DB closed and released');
+    _dependencies.logger.warn('[DB] All connections to DB closed and released');
 
 };
 DB.initConnection = connect;

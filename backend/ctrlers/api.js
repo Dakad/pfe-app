@@ -27,7 +27,8 @@
  */
  // Built-in
 
-
+ // npm
+const _ = require('lodash');
 
  // Custom -Mine
 const Util = require('../modules/util');
@@ -36,8 +37,37 @@ const DB = require('../db/dal');
 const UserDAO = require('../db/dao/users');
 const AppsDAO = require('../db/dao/apps');
 
+// Custom - Mine
+const InjectError = require('../modules/di-inject-error');
+const apiCtrler = {};
 
 
+
+
+// Injected
+let _dependencies = {};
+
+
+
+
+/**
+ * Used for the D.I, receive all dependencies via opts
+ * Will throw an InjectError if missing a required dependenccy
+ * @parameter   {Object}    opts    Contains all dependencies needed by ths modules
+ *
+ */
+
+apiCtrler.inject = function inject (opts) {
+
+    if(!opts){
+        throw new InjectError('all dependencies', 'renderCtrler.inject()');
+    }
+
+
+    // Clone the options into my own _dependencies
+    _dependencies = _.assign(_dependencies,opts);
+
+};
 
 
 
@@ -48,7 +78,7 @@ const sendJsonResponse = function (res,statut,data){
 
 
 
-const zen = function(req,res,next){
+apiCtrler.zen = function zen(req,res,next){
     return sendJsonResponse(res,200, 'Hello, I\' will soon give u some deep shit quotes ! Just wait for it !');
 }
 
@@ -62,6 +92,4 @@ const zen = function(req,res,next){
  */
 
 // Methods
-module.exports = {
-    zen : zen
-};
+module.exports = apiCtrler;

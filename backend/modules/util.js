@@ -1,14 +1,24 @@
 'use strict';
+
+
+/**
+ * Load modules dependencies.
+ */
+// Built-in
+
+
+// npm
 const util = require("util");
 const crypto = require('crypto');
 
+const _ = require('lodash');
 const Promise = require('bluebird');
 const nconf = require("nconf");
 const Validator = require('validator');
-const _ = require('lodash/core');
 const jwt = require('jsonwebtoken');
-const shortId = require("shortid")
+const shortId = require("shortid");
 const ms = require("ms");
+
 shortId.characters('0123456789a@bcdefghijklmnopqrstuvwxyz_ABCDEFGH!JKLMNOPQR$TUVWXYZ');
 
 

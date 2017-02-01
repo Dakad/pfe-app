@@ -26,12 +26,21 @@
  */
  // Built-in
 
+// npm
+const _ = require('lodash');
+const unless = require('express-unless');
 
-
- // Custom - Mine
+// Custom - Mine
+const InjectError = require('../../modules/di-inject-error');
 const Util = require('../../modules/util');
 const ApiError = require('../../modules/api-error');
-const DB = require('../dal');
+
+
+
+// Injected
+let _dependencies = {};
+let DB;
+
 
 
 
@@ -39,6 +48,30 @@ const DB = require('../dal');
 
 
 const AppsDAO = {
+
+    /**
+     * Used for the D.I, receive all dependencies via opts
+     * Will throw an InjectError if missing a required dependenccy
+     * @parameter   {Object}    opts    Contains all dependencies needed by ths modules
+     *
+     */
+    inject : function inject (opts) {
+
+        if(!opts){
+            throw new InjectError('all dependencies', 'AppsDAO.inject()');
+        }
+
+        if(!opts.dal) {
+            throw new InjectError('dal', 'AppsDAO.inject()');
+        }
+
+
+        // Clone the options into my own _dependencies
+        _dependencies = _.assign(_dependencies,opts);
+        DB = _dependencies.dal;
+    },
+
+
     build   : function (nApp){
         return DB.Apps.build(nApp);
     },
@@ -87,7 +120,7 @@ const AppsDAO = {
                 secret : client.secret || client.clientSecret
             }
         }).then(function(dbClient){
-            if (!dbClient) 
+            if (!dbClient)
             throw new ApiError.NotFound('This client is not registred. Unknown id or secret!');
             return (dbClient) ? dbClient : new ApiError.NotFound('This client is not registred. Unknown id or secret!');
         });

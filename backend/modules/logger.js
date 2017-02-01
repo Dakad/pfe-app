@@ -26,7 +26,7 @@
 /**
  * Load modules dependencies.
  */
- // Built-in
+ // npm
 const winston = require('winston');
 winston.emitErrs = true;
 

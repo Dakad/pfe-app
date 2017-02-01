@@ -27,21 +27,68 @@
  * Load modules dependencies.
  */
 // Built-in
+
+// npm
 const nconf = require('nconf');
-const _ = require("lodash/core");
+const _ = require("lodash");
 const unless = require('express-unless');
 
 
 // Custom -Mine
-const renderCtrl = require('./render');
 const Util = require('../modules/util');
+const InjectError = require('../modules/di-inject-error');
 const ApiError = require('../modules/api-error');
-const DB = require('../db/dal');
-const UsersDAO = require('../db/dao/users');
-const AppsDAO = require('../db/dao/apps');
+
+
+/**
+ * Variables
+ *
+ */
+const UserCtrler = {};
+ // Injected
+let _dependencies = {};
+let DB;
+let UsersDAO;
+let AppsDAO;
 
 
 
+
+UserCtrler.inject = function inject (opts) {
+
+    if(!opts){
+        throw new InjectError('all dependencies', 'authCtrler.inject()');
+    }
+
+    if(!opts.dal) {
+        throw new InjectError('dal', 'authCtrler.inject()');
+    }
+
+    if(!opts.daos) {
+        throw new InjectError('daos', 'authCtrler.inject()');
+    }
+
+    if(!_.has(opts,'daos.users') ) {
+        throw new InjectError('daos.api', 'authCtrler.inject()');
+    }
+
+    if(!_.has(opts,'daos.apps') ) {
+        throw new InjectError('daos.auth', 'authCtrler.inject()');
+    }
+/*
+    if(!_.has(opts,'daos.authApps') ) {
+        throw new InjectError('daos.authApps', 'authCtrler.inject()');
+    }
+
+*/
+    // Clone the options into my own _dependencies
+    _dependencies = _.assign(_dependencies,opts);
+
+    DB = _dependencies.dal;
+    UsersDAO = _dependencies.daos.users;
+    AppsDAO = _dependencies.daos.apps;
+
+};
 
 
 /*********************************
@@ -54,7 +101,7 @@ const AppsDAO = require('../db/dao/apps');
  * Check if this public requested made by user is auth before
  *
  */
-const isAuth = function(req, res, next) {
+UserCtrler.isLogged = function isAuth (req, res, next) {
     const cookies = req.signedCookies;
     // If not, check if req.headers || req.body contains a token
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
@@ -75,14 +122,14 @@ const isAuth = function(req, res, next) {
         });
 
 }
-isAuth.unless = unless;
+UserCtrler.isLogged.unless = unless;
 
 
 /**
  * Handle the login on the public
  *
  */
-const logIn = function(req, res, next) {
+UserCtrler.logMe = function logIn (req, res, next) {
     const user = req.body;
     // Validate the input from the user
     Util.validInput(user).then(function() {
@@ -121,7 +168,7 @@ const logIn = function(req, res, next) {
  * Handle the signup on the public
  *
  */
-const signUp = function(req, res, next) {
+UserCtrler.registerMe = function signUp (req, res, next) {
     // Validate the input from the req.body
     Util.validInput(req.body).then(function() {
         // Sanitize & clear the input
@@ -152,7 +199,7 @@ const signUp = function(req, res, next) {
  * to retrieve the infos sent by the client.
  *
  */
-const retrieveClientInfo = function (req,res,next)  {
+UserCtrler.retrieveClientInfo = function digIntoHeadersOrBody (req,res,next)  {
     const retrieveFrom = (source) => {
         const infos = {};
         let info = source['clientId'];
@@ -199,9 +246,7 @@ const retrieveClientInfo = function (req,res,next)  {
  * Otherwise, don't talk to him, just shO0ot him with a APIError
  *
  */
-const getApiToken = function (req,res) {
-    console.log(req.from);
-
+UserCtrler.getApiToken = function createApiToken (req,res) {
     // Go fetch the requested & registred client
     AppsDAO.checkIfRegistred(req.from)
     .then((client) =>{
@@ -249,7 +294,7 @@ const getApiToken = function (req,res) {
  * Otherwise, don't talk to him, just shO0ot him with a APIError
  *
  */
-const checkApiToken = function(req, res, next) {
+UserCtrler.authorize = function checkApiToken (req, res, next) {
     // Check if token && token is mine
     // If ok, next(true)
     // Otherwise, throw ForbiddenError('You shall not pass ! Auth yourself first')
@@ -260,7 +305,7 @@ const checkApiToken = function(req, res, next) {
 /**
  * Show the page to allow the user to grant a client.
  */
-const dialogPage = function (req,res) {
+UserCtrler.dialogPage = function dialogPage (req,res) {
 
     if(req.method === 'GET' && req.path === '/grant'){
         res.client.accessToken = undefined;
@@ -271,29 +316,28 @@ const dialogPage = function (req,res) {
 }
 
 
-const afterLoggedForGrant = function(req,res){
+UserCtrler.afterLoggedForGrant = function afterLoggedForGrant (req,res){
     //res.redirect('/auth/grant');
 }
 
 /**
  * The user allowed the client to gain acces to his data.
  */
-const grantApp = function (req,res,next) {
+UserCtrler.grant = function grantApp (req,res,next) {
     console.log(req.body);
     debugger
-    if(req.body.choice === 'yes')
-        DB.App
-
+    // if(req.body.choice === 'yes')
+        // DB.App
 };
 
 
 /**
  * Error Handler
  */
-const errorHandler = function(err, req, res, next) {
+UserCtrler.errorHandler = function errorHandler (err, req, res, next) {
         // An error occured while
        if(req.method === 'GET' && req.path === '/grant' && err.status === 401 ) // An error occured while gather info about the client for display
-        return dialogPage(req,res);
+        return UserCtrler.dialogPage(req,res);
 
     // Create method to send only json for the errors
     // Send th err as json {status,err{status,message}
@@ -313,30 +357,4 @@ const errorHandler = function(err, req, res, next) {
 
 
 // Export for /public auth
-module.exports = {
-    errorHandler : errorHandler,
-
-    isLogged: isAuth,
-
-    authorize : checkApiToken,
-
-    logMe: logIn,
-
-    registerMe: signUp,
-
-// Export for /auth for api
-
-    dialogPage : dialogPage,
-
-    afterLoggedForGrant : afterLoggedForGrant,
-
-    grant   : grantApp,
-
-    retrieveClientInfo : retrieveClientInfo,
-
-
-    getApiToken   : getApiToken
-
-
-
-}
+module.exports = UserCtrler;

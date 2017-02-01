@@ -26,20 +26,28 @@
  */
 
 // Built-in
+const path = require('path');
+
+// npm
 const Promise = require("promise");
 const dconf = require('dotenv');
 const nconf = require('nconf');
 const URL = require('url');
 const uuidV4 = require('uuid/v4');
 
-// Custom - Mine
-const logger = require("./logger.js")
+// Mine
+const InjectError = require('./di-inject-error');
+const envFile = path.join(__dirname,'..','.env');
 
 
 
 
-const dbUrlParseur = function(cb) {
-    const DB_URL = URL.parse(process.env.DATABASE_URL);
+
+
+const dbUrlParser = function dbUrlParser(cb) {
+    // const DB_URL = URL.parse(process.env.DATABASE_URL);
+    const DB_URL = URL.parse(nconf.get('DATABASE_URL'));
+    // const DB_AUTH = DB_URL.auth.split(':');
     const DB_AUTH = DB_URL.auth.split(':');
 
     nconf.overrides({
@@ -67,13 +75,16 @@ const dbUrlParseur = function(cb) {
 
 // Methods
 module.exports = {
-    load: function() {
+    load: function(logger) {
+        if (!logger) {
+            throw new InjectError('logger', 'Config.load()');
+        }
         return new Promise(function(fulfill, reject) {
             try {
                 logger.info('[Config] Load .env vars into process.env');
                 dconf.load(); // LOAD my .env files into process.env
                 nconf.env(); // LOAD All process into nconf
-                dbUrlParseur();
+                dbUrlParser();
                 nconf.defaults({ 'APP_PORT': 3030 });
                 // If not env. var TOKENT_SECRET, define a new one.
                 nconf.defaults({ 'TOKEN_SECRET': uuidV4() });

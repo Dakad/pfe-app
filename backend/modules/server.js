@@ -25,11 +25,15 @@
  */
 
 // Built-in
+const path = require('path');
+
+
+// npm
+const _ = require('lodash');
 const Promise = require('bluebird');
 const nconf = require('nconf');
 const express = require('express');
 const favicon = require('serve-favicon');
-const path = require('path');
 const Morgan = require('morgan');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
@@ -38,14 +42,7 @@ const cookieParser = require('cookie-parser');
 
 
 // Custom - Mine
-const DAL = require("../db/dal");
-const logger = require("./logger");
-
-
-// Routes
-const apiRoute = require('../routes/api');
-const authRoute = require('../routes/auth');
-const defRoute = require('../routes/public');
+const InjectError = require('./di-inject-error');
 
 
 
@@ -58,6 +55,10 @@ const _app = express();
 // To expose the methods on the server for outside
 const Server = {};
 
+let _dependencies = {};
+
+
+
 
 
 /**
@@ -66,8 +67,17 @@ const Server = {};
  *
  */
 function getBindedServerPort() {
-    return (Server._server && Server._server.address()) ? Server._server.address().port : nconf.get('APP_PORT');
+    return (Server.instance && Server.instance.address()) ? Server.instance.address().port : nconf.get('APP_PORT');
 }
+
+
+/**
+ * Events cb for error the Server
+ */
+function onError(err) {
+    _dependencies.logger.error('[Server] ' + err);
+};
+
 
 
 /**
@@ -76,58 +86,72 @@ function getBindedServerPort() {
  *		- parse json bodies
  *
  */
-function configServer() {
+Server.configServer = function configServer(options) {
+    if (!options) {
+        throw new InjectError('all dependencies', 'Server.configServer()');
+    }
+
+    if (!options.logger) {
+        throw new InjectError('logger', 'Server.configServer()');
+    }
+
+    if (!options.dal) {
+        throw new InjectError('dal', 'Server.configServer()');
+    }
+
+    // Clone the options into my own _dependencies
+    _dependencies = _.assign(_dependencies, options);
+
     return new Promise(function(fulfill) {
-            let folder = path.join(__dirname, '..', 'static');
-            logger.info('[Server] Init the app(Express) with static folder :', folder);
-            _app.use(express.static(folder));
+        let folder = path.join(__dirname, '..', 'static');
+        _dependencies.logger.info('[Server] Init the app(Express) with static folder :', folder);
+        _app.use(express.static(folder));
 
-            folder = path.join(folder, 'img', 'favicon.ico');
-            logger.info('[Server] Init the app(Express) with the favicon :', folder);
-            _app.use(favicon(folder));
+        folder = path.join(folder, 'img', 'favicon.ico');
+        _dependencies.logger.info('[Server] Init the app(Express) with the favicon :', folder);
+        _app.use(favicon(folder));
 
-            // View engine setup
-            folder = path.join(__dirname, '..', 'views');
-            logger.info('[Server] Init the app(Express) with views folder :', folder);
-            _app.set('views', folder);
-
-
-            logger.info('[Server] Init the app(Express) with Views Engine :', ' Pug(Jade)');
-            _app.set('view engine', 'pug');
-
-            // Get port from env and store in Express.
-            // logger.info('[Server] Init the app(Express) with env Port :',nconf.get('PORT'));
-            // _app.set('port', nconf.get('PORT'));
-
-            logger.info('[Server] Init the app(Express) with Logger :', 'WINSTON with morgan stream');
-            _app.use(Morgan("short"));
+        // View engine setup
+        folder = path.join(__dirname, '..', 'views');
+        _dependencies.logger.info('[Server] Init the app(Express) with views folder :', folder);
+        _app.set('views', folder);
 
 
-            logger.info('[Server] Init the app(Express) with BOdyParser to :', 'JSON');
-            _app.use(bodyParser.json()); // The body is parsed into JSON
-            _app.use(bodyParser.urlencoded({
-                extended: false
-            })); // The JSON parsed body will only
-            // contain key-value pairs, where the value can be a string or array
+        _dependencies.logger.info('[Server] Init the app(Express) with Views Engine :', ' Pug(Jade)');
+        _app.set('view engine', 'pug');
 
-            logger.info('[Server] Init the app(Express) with CookieParser ');
-            _app.use(cookieParser(nconf.get('APP_COOKIE_SECRET')));
+        // Get port from env and store in Express.
+        // logger.info('[Server] Init the app(Express) with env Port :',nconf.get('PORT'));
+        // _app.set('port', nconf.get('PORT'));
 
-
-            logger.info('[Server] Init the app(Express) with validator middleware :', 'expressValidator');
-            _app.use(expressValidator());
+        _dependencies.logger.info('[Server] Init the app(Express) with Logger :', 'WINSTON with morgan stream');
+        _app.use(Morgan("short"));
 
 
-            logger.info('[Server] Init the app(Express) protection from some well-known web vulnerabilities :', 'helmet');
-            //_app.use(helmet());
-            // _app.use(helmet.noCache());
+        _dependencies.logger.info('[Server] Init the app(Express) with BOdyParser to :', 'JSON');
+        _app.use(bodyParser.json()); // The body is parsed into JSON
+        _app.use(bodyParser.urlencoded({
+            extended: false
+        })); // The JSON parsed body will only
+        // contain key-value pairs, where the value can be a string or array
+
+        _dependencies.logger.info('[Server] Init the app(Express) with CookieParser ');
+        _app.use(cookieParser(nconf.get('APP_COOKIE_SECRET')));
 
 
-            logger.info('[Server] Init done !');
-            fulfill();
-        });
+        _dependencies.logger.info('[Server] Init the app(Express) with validator middleware :', 'expressValidator');
+        _app.use(expressValidator());
+
+
+        _dependencies.logger.info('[Server] Init the app(Express) protection from some well-known web vulnerabilities :', 'helmet');
+        //_app.use(helmet());
+        // _app.use(helmet.noCache());
+
+
+        _dependencies.logger.info('[Server] Init done !');
+        fulfill();
+    });
 };
-
 
 
 
@@ -139,23 +163,64 @@ function configServer() {
  *		- Set the config middlewares to the route
  *		- Init the route
  */
-function configRoutes() {
+Server.configRoutes = function configRoutes(options) {
+    if (!options) {
+        throw new InjectError('all dependencies', 'Server.configRoutes()');
+    }
+    if (!_.hasIn(options, 'logger')) {
+        throw new InjectError('logger', 'Server.configRoutes()');
+    }
+
+    if (!_.hasIn(options, 'routes')) {
+        throw new InjectError('routes', 'Server.configRoutes()');
+    }
+
+    if (!_.hasIn(options, 'ctrlers')) {
+        throw new InjectError('ctrlers', 'Server.configRoutes()');
+    }
+
+    if (!_.hasIn(options, 'daos')) {
+        throw new InjectError('daos', 'Server.configRoutes()');
+    }
+
+    // Clone the options into my own _dependencies
+    _dependencies = _.assign(_dependencies, options);
+
+    let logger = _dependencies.logger;
+    let routes = _dependencies.routes;
+    let ctrlers = _dependencies.ctrlers;
+    let dal = _dependencies.dal;
+    let daos = _dependencies.daos;
+
+    const optionsToInject = _.assign({}, ctrlers, dal, daos);
+
     return new Promise(function(fulfill) {
+        if (!_.has(_dependencies, 'ctrlers.api')) {
+            throw new InjectError('apiCtrler', 'Server.configRoutes()');
+        }
 
-        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/api/*');
-        _app.use('/api', apiRoute);
-        apiRoute.init();
+        if (!_.has(_dependencies, 'ctrlers.auth')) {
+            throw new InjectError('authCtrler', 'Server.configRoutes()');
+        }
+
+        if (!_.has(_dependencies, 'ctrlers.public')) {
+            throw new InjectError('publicCtrler', 'Server.configRoutes()');
+        }
+
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', routes.api.url);
+        _app.use(routes.api.url, routes.api.src);
+        routes.api.src.init();
 
 
-        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/auth/*');
-        _app.use('/auth', authRoute);
-        authRoute.init();
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', routes.auth.url);
+        _app.use(routes.auth.url, routes.auth.src);
+        routes.auth.src.init();
 
 
-        logger.info('[Server - Routes] Init the app(Express) with route for : ', '/*', '/public/*');
-        _app.use('/public', defRoute);
-        _app.use('/', defRoute);
-        defRoute.init();
+        logger.info('[Server - Routes] Init the app(Express) with route for : ', routes.index.url, routes.public.url);
+        _app.use(routes.public.url, routes.public.src);
+        _app.use(routes.index.url, routes.index.src);
+        routes.index.src.init();
 
         logger.info('[Server - Routes] Init done !');
 
@@ -163,15 +228,6 @@ function configRoutes() {
     });
 
 }
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -182,19 +238,18 @@ function configRoutes() {
  *		- Notify the callback
  *
  */
-Server.start = function(cb) {
+Server.start = function start (cb) {
 
-    return Promise.all([DAL.initConnection(), configServer(), configRoutes()])
-        .then(function () {
+    return new Promise(function(fulfill) {
             // Hold the instance of server
-            Server._server = _app.listen(nconf.get('APP_PORT'));
+            Server.instance = _app.listen(nconf.get('APP_PORT'));
 
-            Server._server.on('listening', function() {
-                logger.info('[Server] Web server listening on Port', getBindedServerPort());
+            Server.instance.on('listening', function() {
+                _dependencies.logger.info('[Server] Web server listening on Port', getBindedServerPort());
             });
 
-            Server._server.on('close', Server.stop);
-            Server._server.on('error', function(error) {
+            Server.instance.on('close', Server.stop);
+            Server.instance.on('error', function onError(error) {
                 if (error.syscall !== 'listen') {
                     throw error;
                 }
@@ -202,15 +257,17 @@ Server.start = function(cb) {
                 // handle specific listen errors with friendly messages
                 switch (error.code) {
                     case 'EACCES':
-                        Server.onError(new Error('Port :' + getBindedServerPort() + ' requires elevated privileges', error));
+                        onError(new Error('Port :' + getBindedServerPort() + ' requires elevated privileges.\n', error));
                         break;
                     case 'EADDRINUSE':
-                        Server.onError(new Error('Port :' + getBindedServerPort() + ' is already in use', error));
+                        onError(new Error('Port :' + getBindedServerPort() + ' is already in use.\n', error));
                         break;
                     default:
-                        Server.onError(error);
+                        onError(error);
                 }
             });
+
+            fulfill();
         }).nodeify(cb); // Change this sh*t function into good Promise
 };
 
@@ -221,25 +278,19 @@ Server.start = function(cb) {
  *      - Stop the server
  */
 Server.stop = function() {
-    const _server = Server._server;
-    if (_server && typeof _server.close == 'function') {
-        DAL.stopConnection();
-        _server.close();
-        logger.warn('[Server] Web server no more listening on Port', getBindedServerPort());
+    let logMsg;
+    if (Server.instance && typeof Server.instance.close === 'function') {
+        _dependencies.dal.stopConnection();
+        Server.instance.close();
+        logMsg = '[Server] Web server no more listening on Port';
+        _dependencies.logger.warn(logMsg, getBindedServerPort());
         process.exit();
-    }
-    else {
-        logger.error('[Server] Cannot stop web server not yet still listening on :' + getBindedServerPort());
+    } else {
+        logMsg ='[Server] Cannot stop web server not yet still listening on :' ;
+        _dependencies.logger.error(logMsg, getBindedServerPort());
     }
 };
 
-
-/**
- * Events cb for error the Server
- */
-Server.onError = function(err) {
-    logger.error('[Server] ' + err);
-};
 
 
 
@@ -247,7 +298,5 @@ Server.onError = function(err) {
 /**
  * Exports
  */
-
-// Methods
 
 module.exports = Server;

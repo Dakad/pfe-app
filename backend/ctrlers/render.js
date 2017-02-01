@@ -32,32 +32,72 @@
  * Load modules dependencies.
  */
 // Built-in
+
+// npm
+const _ = require('lodash');
 const unless = require('express-unless');
 
 // Custom - Mine
+const InjectError = require('../modules/di-inject-error');
+
 const jsonDocFormat = require("../static/cheatsheet-help");
 const devTeam = require("../static/dev-team");
 
 
 
+/**
+ * Variables
+ *
+ */
+ const renderCtrler = {};
+
+// Injected
+let _dependencies = {};
 
 
-const renderHomePage = function(req, res) {
-    res.render('home', { title: 'PFE App' });
+
+
+/**
+ * Used for the D.I, receive all dependencies via opts
+ * Will throw an InjectError if missing a required dependenccy
+ * @parameter   {Object}    opts    Contains all dependencies needed by ths modules
+ *
+ */
+renderCtrler.inject = function inject (opts) {
+
+    if(!opts){
+        throw new InjectError('all dependencies', 'renderCtrler.inject()');
+    }
+
+
+    // Clone the options into my own _dependencies
+    _dependencies = _.assign(_dependencies,opts);
+
 };
 
-const renderLoginPage = function(req, res) {
-    res.render('user/login', { title: 'Sign in to continue' });
+
+renderCtrler.homePage = function renderHomePage(req, res) {
+    res.render('home', {
+        title: 'PFE App'
+    });
 };
-renderLoginPage.unless = unless;
 
-const renderSignupPage = function(req, res) {
-    res.render('user/signup', { title: 'Register a new user' });
+renderCtrler.loginPage = function renderLoginPage(req, res) {
+    res.render('user/login', {
+        title: 'Sign in to continue'
+    });
 };
-renderSignupPage.unless = unless;
+renderCtrler.loginPage.unless = unless;
+
+renderCtrler.signupPage = function renderSignupPage(req, res) {
+    res.render('user/signup', {
+        title: 'Register a new user'
+    });
+};
+renderCtrler.signupPage.unless = unless;
 
 
-const renderDocPage = function(req, res) {
+renderCtrler.docPage = function renderDocPage(req, res) {
     res.render('doc', {
         title: 'API Documentation',
         format: jsonDocFormat,
@@ -65,85 +105,58 @@ const renderDocPage = function(req, res) {
     });
 };
 
-const renderExePage = function(req, res) {
-    res.render('exe', { title: 'Little training before the project' });
+renderCtrler.trainingPage = function renderExePage(req, res) {
+    res.render('exe', {
+        title: 'Little training before the project'
+    });
 };
 
-const renderAboutPage = function(req, res) {
+renderCtrler.aboutPage = function renderAboutPage(req, res) {
     res.render('about', {
         title: 'About the dev team of this marvellous app',
         team: devTeam
     });
 };
 
-const renderAppListPage = function(req, res) {
-      res.render('app/list', {
-        title : 'List of your registred apps',
-        apps : res.apps || [res.client]
+renderCtrler.appListPage = function renderAppListPage(req, res) {
+    res.render('app/list', {
+        title: 'List of your registred apps',
+        apps: res.apps || [res.client]
     });
 };
 
-const renderAppUpsertPage = function(req, res) {
+renderCtrler.appUpsertPage = function renderAppUpsertPage(req, res) {
     return res.render('app/upsert', {
-        title : res.title,
+        title: res.title,
         action: res.action,
-        client : res.client
+        client: res.client
     });
 }
 
 
-const renderDialogPage = function (req,res,next){
-    return res.render('dialog',{
-        title : 'Grant access to ' + res.client.name,
-        client : res.client ,
-        user   : req.user
+renderCtrler.dialogPage = function renderDialogPage(req, res) {
+    return res.render('dialog', {
+        title: 'Grant access to ' + res.client.name,
+        client: res.client,
+        user: req.user
     });
 }
 
 
 
-const renderErrorPage = function(err, res, next) {
+renderCtrler.errorPage = function renderErrorPage(err, res) {
     // set locals, only providing error in development
     res.locals.err = err;
     res.locals.msg = err.message;
     res.locals.status = err.status;
-    res.locals.title = err.title || 'Error'
+    res.locals.title = err.title || 'Error';
     return res.status(err.status || 500).render('error');
 };
-
-
-
-
-
 
 
 /**
  * Exports
  */
 
-// Methods
-module.exports = {
-
-    homePage: renderHomePage,
-
-    loginPage: renderLoginPage,
-
-    signupPage: renderSignupPage,
-
-    docPage : renderDocPage,
-
-    appListPage: renderAppListPage,
-
-    appUpsertPage: renderAppUpsertPage,
-
-    trainingPage: renderExePage,
-
-    aboutPage: renderAboutPage,
-
-    dialogPage: renderDialogPage,
-
-
-    errorPage: renderErrorPage,
-};
-
+module.exports = renderCtrler;
 

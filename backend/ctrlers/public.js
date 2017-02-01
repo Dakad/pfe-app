@@ -31,18 +31,16 @@
  * Load modules dependencies.
  */
 // Built-in
-const _ = require("lodash/core");
+
+// npm
+const _ = require("lodash");
 const unless = require('express-unless');
 
 
 // Custom - Mine
-const renderCtrl = require('./render');
-const logger = require('../modules/logger');
 const Util = require('../modules/util');
+const InjectError = require('../modules/di-inject-error');
 const ApiError = require('../modules/api-error');
-const DB = require('../db/dal');
-const UsersDAO = require('../db/dao/users');
-const AppsDAO = require('../db/dao/apps');
 
 
 
@@ -50,6 +48,16 @@ const AppsDAO = require('../db/dao/apps');
  * Variables
  *
  */
+ const publicCtrler = {};
+
+// Injected
+let _dependencies = {};
+let logger;
+let renderCtrl;
+let DB ;
+let UsersDAO;
+let AppsDAO;
+
 
 
 const DEFAULT_COOKIE_OPTIONS = {
@@ -135,27 +143,73 @@ const validSchema = {
 
 
 
+
+
+
+/**
+ * Used for the D.I, receive all dependencies via opts
+ * Will throw an InjectError if missing a required dependenccy
+ * @parameter   {Object}    opts    Contains all dependencies needed by ths modules
+ *
+ */
+publicCtrler.inject = function inject (opts) {
+
+    if(!opts){
+        throw new InjectError('all dependencies', 'publicCtrler.inject()');
+    }
+
+    if(!opts.dal) {
+        throw new InjectError('dal', 'publicCtrler.inject()');
+    }
+
+    if(!opts.daos) {
+        throw new InjectError('daos', 'publicCtrler.inject()');
+    }
+
+    if(!_.has(opts,'daos.users') ) {
+        throw new InjectError('daos.api', 'publicCtrler.inject()');
+    }
+
+    if(!_.has(opts,'daos.apps') ) {
+        throw new InjectError('daos.auth', 'publicCtrler.inject()');
+    }
+
+
+    // Clone the options into my own _dependencies
+    _dependencies = _.assign(_dependencies,opts);
+
+    DB = _dependencies.dal;
+    UsersDAO = _dependencies.daos.users;
+    AppsDAO = _dependencies.daos.apps;
+
+};
+
+
+
+
+
 /*********************************
  * Route for GET              *
  *********************************/
 
-
-const appHandler = function(req,res,next){
-    const actions = ['edit','reset','delete','export'];
-
+/**
+ * Handle all actions made on /app/:clientId
+ *
+ */
+publicCtrler.appHandler = function appHandler(req, res) {
     switch (req.query.action) {
         case 'edit':
-            res.title = 'Edit '+ res.client.name;
+            res.title = 'Edit ' + res.client.name;
             res.action = 'POST';
             break;
         case 'reset': // Reset the client accessToken
-            return resetClientToken(res.client.id).then(()=>{
-                res.flash('success', 'Token reset for '+res.client.name);
+            return resetClientToken(res.client.id).then(() => {
+                res.flash('success', 'Token reset for ' + res.client.name);
                 return res.redirect('/apps');
             });
         case 'delete': // Reset this shitapp
-            return AppsDAO.delete(res.client.id).then(() =>{
-                res.flash('warning',res.client.name + ' have been removed !');
+            return AppsDAO.delete(res.client.id).then(() => {
+                res.flash('warning', res.client.name + ' have been removed !');
                 return res.redirect('/apps');
             });
         case 'export':
@@ -163,27 +217,27 @@ const appHandler = function(req,res,next){
             break;
         default:
             res.action = 'POST';
-            res.title = 'Register a new app'
+            res.title = 'Register a new app';
 
     }
-    return renderCtrl.appUpsertPage(req,res);
-}
+    return renderCtrl.appUpsertPage(req, res);
+};
 
 
 /**
  * Reset the access Token of client
- *
+ * @private
  */
-function resetClientToken(id){
-    return AppsDAO.findById(id).then(function(app){
+function resetClientToken(id) {
+    return AppsDAO.findById(id).then(function(app) {
         return Util.generateSalt().then(function(secret) {
-            app.set('secret',secret);
-            return [app.get('id'),app.get('secret'),app.get('id').length];
-        }).spread(Util.hashPassword)
-        .then((token) => {
-            app.set('accessToken',token);
-            return app.save();
-        });// Util.generateSalt -> hashPwd -> saveToken
+                app.set('secret', secret);
+                return [app.get('id'), app.get('secret'), app.get('id').length];
+            }).spread(Util.hashPassword)
+            .then((token) => {
+                app.set('accessToken', token);
+                return app.save();
+            }); // Util.generateSalt -> hashPwd -> saveToken
     }); // AppDAO.FindById
 }
 
@@ -193,12 +247,12 @@ function resetClientToken(id){
  * List all registred clients of the auth user.
  *
  */
-const listClients = function(req, res, next) {
+publicCtrler.listClients = function listClients(req, res, next) {
     AppsDAO.getUsersApps(req.user.id).then(function(apps) {
         res.apps = apps;
         next();
     });
-}
+};
 
 
 /**
@@ -206,20 +260,20 @@ const listClients = function(req, res, next) {
  * or in the URL parameter/query.
  *
  */
-const getClient = function(req,res,next){
+publicCtrler.getClient = function getClient(req, res, next) {
     let clientId = (req.from) ? req.from.clientId : undefined;
     if (req.params.clientId) {
         req.checkParams('clientId', 'Invalid id for client').notEmpty();
         req.sanitizeParams();
         clientId = req.params.clientId;
-    }else{ // Req from outside (API)
-        if(!req.from){
+    } else { // Req from outside (API)
+        if (!req.from) {
             req.checkQuery('clientId', 'Invalid id for client').notEmpty();
             req.sanitizeQuery('clientId');
         }
         // Req for /auth && has been retrieve from the headers
         clientId = (!req.from) ? req.query.clientId : req.from.clientId;
-}
+    }
     req.getValidationResult().then(function(result) {
         res.locals.errors = result.mapped();
         if (!result.isEmpty()) throw new ApiError.BadRequest('Invalid data sent for client.');
@@ -227,9 +281,9 @@ const getClient = function(req,res,next){
     }).then((client) => {
         res.client = client.toJSON();
         next();
-    }).catch((err) => errorHandler(err,req,res,next));
+    }).catch((err) => publicCtrler.errorHandler(err, req, res, next));
 
-}
+};
 
 
 
@@ -244,7 +298,7 @@ const getClient = function(req,res,next){
 /**
  * Entry point for POST /login
  */
-const checkLoginPosted = function(req, res, next) {
+publicCtrler.loginPosted  = function checkLoginPosted(req, res, next) {
     // req.checkBody(validSchema);
     req.checkBody('email', 'Missing the email to be logged in').notEmpty();
     req.checkBody('email', 'Put a valid email to be logged in').isEmail();
@@ -256,12 +310,12 @@ const checkLoginPosted = function(req, res, next) {
             return next(new ApiError.BadRequest('Invalid Data sent'));
         next();
     });
-}
+};
 
 /**
  * What to do after a successful login.
  */
-const afterLoginChecked = function(req, res,next) {
+publicCtrler.afterLogin = function afterLoginChecked(req, res, next) {
     // By default, the cookie expires when the browser is closed.
     let cookieOpts = DEFAULT_COOKIE_OPTIONS;
 
@@ -291,7 +345,7 @@ const afterLoginChecked = function(req, res,next) {
 /**
  * Entry point for POST /signup
  */
-const checkSignPosted = function(req, res, next) {
+publicCtrler.signPosted  = function checkSignPosted(req, res, next) {
     req.checkBody('email', 'Missing the email to be registred').notEmpty();
     req.checkBody('email', 'Put a valid email to be registred').isEmail();
     req.checkBody('pwd', 'Missing the password to be registred').notEmpty();
@@ -311,7 +365,7 @@ const checkSignPosted = function(req, res, next) {
 /**
  * What to do after a successful signup.
  */
-const afterSignChecked = function(req, res, next) {
+publicCtrler.afterSignin = function afterSignChecked(req, res, next) {
     res.flash('success', {
         title : 'Welcome onboard!',
         msg : 'You can go log in now.'
@@ -323,7 +377,7 @@ const afterSignChecked = function(req, res, next) {
 /**
  * Handle the insert or update of a client.
  */
-const upsertApp = function(req, res, next) {
+publicCtrler.upsertApp = function upsertApp(req, res, next) {
     const isEditing = (req.query.action && req.query.action === "edit");
     let nApp;
     req.checkBody('appName', 'Missing the application name to be registred').notEmpty();
@@ -344,27 +398,30 @@ const upsertApp = function(req, res, next) {
             redirectUri: req.body.appUri,
             useRedirectUri: req.body.appUseUriAsDefault || false,
             description: req.body.appDescrip || null,
-            logo : req.body.appLogo,
+            logo: req.body.appLogo,
             owner: req.user.id
         });
         return AppsDAO.create(nApp);
     }).spread(function(client, created) {
-        if(!isEditing && !created){ // req for new client but existing ?
+        if (!isEditing && !created) { // req for new client but existing ?
             //res.client = req.body;
-            return res.flash('warning','This name is not available');
+            return res.flash('warning', 'This name is not available');
             //return renderCtrl.appUpsertPage(req,res);
         }
-        if(isEditing){ // req for editing an client
-            client.update(nApp.get({plain: true}));
-            res.flash('success','All modifications made are saved');
-        }else{
-            res.flash('success', client.name +' is registred');
+        if (isEditing) { // req for editing an client
+            client.update(nApp.get({
+                plain: true
+            }));
+            res.flash('success', 'All modifications made are saved');
+        }
+        else {
+            res.flash('success', client.name + ' is registred');
         }
         return res.redirect('/apps');
     }).catch(function(err) {
         console.log(err);
     });
-}
+};
 
 
 
@@ -374,7 +431,7 @@ const upsertApp = function(req, res, next) {
  *********************************/
 
 
-const logout = function(req, res) {
+publicCtrler.logMeOut = function logout(req, res) {
     req.clearCookies();
     req.session = null; // Destroy session
     res.locals.isAuth = false;
@@ -390,12 +447,12 @@ const logout = function(req, res) {
 /**
  * Error Handler
  */
-const errorHandler = function(err, req, res, next) {
+publicCtrler.errorHandler = function errorHandler(err, req, res) {
     if (!err) err = new Error('Not Found - Something went south');
     if (!err.status) err.status = 404;
 
-    if( err instanceof ApiError.Unauthorized)
-        if(req.path === '/login' || req.path === '/signup' && req.method === 'GET')
+    if (err instanceof ApiError.Unauthorized)
+        if (req.path === '/login' || req.path === '/signup' && req.method === 'GET')
             return res.redirect('/');
 
     logger.error(err);
@@ -411,25 +468,5 @@ const errorHandler = function(err, req, res, next) {
  * Exports
  */
 
-// Methods
-module.exports = {
-    loginPosted: checkLoginPosted,
-    afterLogin: afterLoginChecked,
-
-    logMeOut: logout,
-
-    signPosted: checkSignPosted,
-    afterSignin: afterSignChecked,
-
-    appHandler : appHandler,
-
-    listClients: listClients,
-
-    getClient: getClient,
-
-    upsertApp: upsertApp,
-
-
-
-    errorHandler: errorHandler
-};
+// Objectt
+module.exports = publicCtrler;
