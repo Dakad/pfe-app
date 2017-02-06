@@ -59,7 +59,7 @@ const _dependencies = {
     'auth' :  { 'url' : '/auth',  src : authRoute},
     'public': { 'url' : '/public',src : defRoute}
   },
-  ctrlers: {
+  ctrles: {
     'api' : apiCtrler,
     'auth': authCtrler,
     'public': publicCtrler,
